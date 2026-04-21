@@ -1,19 +1,21 @@
 # HyperFrames on Vercel
 
-Preview HyperFrames compositions in the browser and render MP4s server-side — on Vercel. Powered by [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) (Chrome + FFmpeg preinstalled) and [Vercel Blob](https://vercel.com/docs/vercel-blob) for storage.
+Preview HTML-based video compositions in the browser and render MP4s server-side — on Vercel. Powered by [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) for rendering and [Vercel Blob](https://vercel.com/docs/vercel-blob) for output storage.
 
 [HyperFrames](https://github.com/heygen-com/hyperframes) is an open-source video rendering framework: write HTML + CSS + GSAP, get a reproducible MP4.
+
+![Template preview showing the Figma product promo composition playing in the browser](./docs/preview.png)
 
 ## Deploy
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fheygen-com%2Fhyperframes-vercel-template&stores=%5B%7B%22type%22%3A%22blob%22%7D%5D)
 
-Deploying provisions a Vercel Blob store; the `BLOB_READ_WRITE_TOKEN` env var is injected automatically. Sandbox auth is provided via `VERCEL_OIDC_TOKEN` at runtime — no extra setup.
+Deploying provisions a Vercel Blob store; `BLOB_READ_WRITE_TOKEN` is injected automatically. Sandbox auth is handled at runtime via `VERCEL_OIDC_TOKEN` — no extra setup.
 
 ## What this template does
 
-- **Preview** a bundled composition (`product-promo`) using `<hyperframes-player>`, the zero-dependency web component from `@hyperframes/player`.
-- **Render** that composition to MP4 by POSTing to `/api/render`. The route spawns a [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) microVM, installs the `hyperframes` CLI, runs `hyperframes render`, uploads the MP4 to Vercel Blob, and returns a public URL.
+- **Preview** a bundled composition (`product-promo`) in the browser using `<hyperframes-player>`, the zero-dependency web component from `@hyperframes/player`.
+- **Render** the composition to an MP4 by POSTing to `/api/render`. The route restores a pre-baked Vercel Sandbox, runs `hyperframes render`, uploads the MP4 to Vercel Blob, and returns a public URL.
 
 **Authoring happens locally.** This template ships with one pre-authored composition. To build your own, use the HyperFrames CLI on your machine:
 
@@ -23,23 +25,42 @@ cd my-video
 npx hyperframes preview   # live-reload editor in your browser
 ```
 
-Then copy the result into this template's `public/compositions/` folder and update the entry path in `app/page.tsx` + `app/api/render/route.ts`.
+Then swap it into this template (see [Swapping the composition](#swapping-the-composition) below).
 
 ## Architecture
 
 ```
- Browser                     Vercel (Node runtime)             Vercel Sandbox (microVM)
-┌────────────────┐          ┌─────────────────────┐           ┌────────────────────────┐
-│ <hyperframes-  │  ──────▶ │ /api/render         │ ──spawn──▶│  npm install hyperframes│
-│  player>       │          │  - walks public/    │           │  npx hyperframes render │
-│ (preview)      │          │    compositions     │           │  Chrome + FFmpeg (built-in)
-│                │          │  - writes into sbox │           │                        │
-│                │ ◀──────  │  - readFile(mp4)    │ ◀──mp4────│                        │
-│                │   url    │  - put() → Blob     │           │                        │
-└────────────────┘          └─────────────────────┘           └────────────────────────┘
+ Browser                   Vercel Functions (node)         Vercel Sandbox (Firecracker microVM)
+┌──────────────────┐      ┌────────────────────────┐      ┌──────────────────────────────────┐
+│ <hyperframes-    │ ───▶ │ /api/render            │ ──▶  │ (restored from snapshot, or      │
+│  player>         │      │  - read composition    │      │  freshly provisioned in dev)     │
+│ preview iframe   │      │  - writeFiles to sbox  │      │                                  │
+│                  │      │  - runCommand: render  │      │  hyperframes render composition  │
+│                  │ ◀──  │  - readFileToBuffer    │ ◀──  │    (Chromium + ffmpeg-static)    │
+│                  │ url  │  - put() → Vercel Blob │  mp4 │                                  │
+└──────────────────┘      └────────────────────────┘      └──────────────────────────────────┘
 ```
 
-**Why Sandbox instead of Vercel Functions?** Functions cap at 300s and 50 MB compressed bundle — HyperFrames needs full Chromium (via Puppeteer) + FFmpeg at runtime, which busts the bundle limit. [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) is the purpose-built primitive for this workload: Amazon Linux 2023, Chrome and FFmpeg preinstalled, up to 5 hours (Pro).
+### The build-time snapshot
+
+Cold render of a 20s composition is ~70 seconds. Most of that time is the actual Chromium render — not setup — because we pre-bake a sandbox **snapshot** at build time instead of installing dependencies on every request.
+
+`scripts/create-snapshot.ts` runs as part of `next build`:
+
+1. Spin up a fresh `node22` sandbox
+2. `dnf install` Chromium system libraries (`nss`, `libXcomposite`, `pango`, …)
+3. `npm install hyperframes ffmpeg-static`
+4. Symlink `ffmpeg-static/ffmpeg` to `/usr/local/bin/ffmpeg`
+5. `npx hyperframes browser ensure` to download chrome-headless-shell
+6. `sandbox.snapshot({ expiration: 7 days })` and write the snapshot ID to a pointer blob at `snapshot-cache/<deployment_id>.json`
+
+At render time, `lib/sandbox.ts`' `restoreOrCreate` reads the pointer blob, restores a sandbox from the snapshot in ~100 ms, writes the composition files, and runs `hyperframes render`. In non-production (local `vercel dev`) it falls back to a fresh setup automatically.
+
+### Why Vercel Sandbox (and not a regular serverless function)
+
+Vercel Functions cap at 300s and 50 MB compressed bundle — HyperFrames needs a full Chromium + FFmpeg at runtime, which busts the bundle limit. [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) is the purpose-built primitive for this workload: an Amazon Linux 2023 Firecracker microVM with sudo-level package installs, up to 5 hours of runtime, and up to 8 vCPUs (we use 4).
+
+With 4 vCPUs, `hyperframes render --workers auto` launches 3 parallel Chrome workers, cutting the render time roughly 2× vs. the single-worker default.
 
 ## Local development
 
@@ -48,18 +69,20 @@ npm install
 npm run dev
 ```
 
-The preview works locally out of the box. The `/api/render` route needs Vercel Sandbox auth — run `vercel env pull` after linking the project to get `VERCEL_OIDC_TOKEN` locally, or test rendering via `vercel dev`.
+Browser preview works locally out of the box. The `/api/render` route needs Vercel Sandbox auth — run `vercel env pull .env.local` after linking the project to get `VERCEL_OIDC_TOKEN` locally, or use `vercel dev`.
 
 ## Project structure
 
 ```
 app/
-  api/render/route.ts    # POST → spawn sandbox, render, upload to Blob
+  api/render/route.ts    # POST → restore sandbox, render, upload to Blob
   page.tsx               # Preview + "Render" button
   layout.tsx
   globals.css
 lib/
-  sandbox.ts             # Thin wrapper around @vercel/sandbox
+  sandbox.ts             # Snapshot-aware wrapper around @vercel/sandbox
+scripts/
+  create-snapshot.ts     # Build-time: pre-bake the sandbox snapshot
 public/
   compositions/
     product-promo/       # The bundled example composition
@@ -71,11 +94,22 @@ public/
 ## Swapping the composition
 
 1. Drop your composition bundle into `public/compositions/<your-name>/`.
-2. Update the two constants at the top of `app/page.tsx` (`COMPOSITION_SRC`, dimensions) and the `COMPOSITION_DIR` in `app/api/render/route.ts`.
+2. Update `COMPOSITION_SRC` / `COMPOSITION_WIDTH` / `COMPOSITION_HEIGHT` at the top of `app/page.tsx`.
+3. Update `COMPOSITION_DIR` in `app/api/render/route.ts`.
 
-## Pricing notes
+### Nested compositions need the runtime script
 
-Vercel Sandbox pricing ([docs](https://vercel.com/docs/vercel-sandbox/pricing)) — Pro plans include $20/mo in Sandbox credit, which covers roughly a few hundred renders of this 20-second example. A 20-second render typically takes 30–90 seconds of Sandbox time.
+If your composition uses `data-composition-src` to lazy-load child scenes (e.g. `registry/examples/product-promo` in the HyperFrames repo), add the runtime script tag to your composition's top-level `index.html` right before `</body>`:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@hyperframes/core/dist/hyperframe.runtime.iife.js"></script>
+```
+
+This is a workaround for [heygen-com/hyperframes#359](https://github.com/heygen-com/hyperframes/pull/359); once that ships in `@hyperframes/player`, the workaround can be removed.
+
+## Pricing
+
+[Vercel Sandbox pricing](https://vercel.com/docs/vercel-sandbox/pricing) — Pro plans include \$20/mo in Sandbox credit. At ~70s per render on 4 vCPUs, that covers roughly a hundred renders/month of the bundled 20-second example. Snapshot storage (the ~650 MB snapshot per deployment) is included in Sandbox pricing.
 
 ## License
 
