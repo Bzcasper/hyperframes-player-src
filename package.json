@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && tsx scripts/create-snapshot.ts",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hyperframes/player": "^0.4.11",
-    "@vercel/blob": "^0.27.0",
+    "@vercel/blob": "^2.3.3",
     "@vercel/sandbox": "^1.6.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
@@ -21,6 +21,7 @@
     "@types/node": "^22.10.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.2"
   },
   "engines": {
