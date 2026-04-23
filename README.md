@@ -4,11 +4,13 @@ Preview HTML-based video compositions in the browser and render MP4s server-side
 
 [HyperFrames](https://github.com/heygen-com/hyperframes) is an open-source video rendering framework: write HTML + CSS + GSAP, get a reproducible MP4.
 
-![Template preview showing the Figma product promo composition playing in the browser](./docs/preview.png)
+![Template preview showing the UI 3D Reveal composition playing in the browser](./docs/preview.png)
+
+**Live demo:** [hyperframes-on-vercel.vercel.app](https://hyperframes-on-vercel.vercel.app)
 
 ## Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fheygen-com%2Fhyperframes-vercel-template&stores=%5B%7B%22type%22%3A%22blob%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?demo-title=HyperFrames+on+Vercel&demo-description=Preview+HTML+video+compositions+in+the+browser+and+render+MP4s+server-side+on+Vercel+Sandbox.&demo-image=https%3A%2F%2Fraw.githubusercontent.com%2Fheygen-com%2Fhyperframes-vercel-template%2Fmain%2Fdocs%2Fpreview.png&demo-url=https%3A%2F%2Fhyperframes-on-vercel.vercel.app&from=templates&project-name=hyperframes-on-vercel&repository-name=hyperframes-on-vercel&repository-url=https%3A%2F%2Fgithub.com%2Fheygen-com%2Fhyperframes-vercel-template&stores=%5B%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22public%22%7D%5D)
 
 Deploying provisions a Vercel Blob store; `BLOB_READ_WRITE_TOKEN` is injected automatically. Sandbox auth is handled at runtime via `VERCEL_OIDC_TOKEN` — no extra setup.
 
