@@ -14,7 +14,7 @@ Deploying provisions a Vercel Blob store; `BLOB_READ_WRITE_TOKEN` is injected au
 
 ## What this template does
 
-- **Preview** a bundled composition (`product-promo`) in the browser using `<hyperframes-player>`, the zero-dependency web component from `@hyperframes/player`.
+- **Preview** a bundled composition (`ui-3d-reveal`) in the browser using `<hyperframes-player>`, the zero-dependency web component from `@hyperframes/player`.
 - **Render** the composition to an MP4 by POSTing to `/api/render`. The route restores a pre-baked Vercel Sandbox, runs `hyperframes render`, uploads the MP4 to Vercel Blob, and returns a public URL.
 
 **Authoring happens locally.** This template ships with one pre-authored composition. To build your own, use the HyperFrames CLI on your machine:
@@ -85,27 +85,16 @@ scripts/
   create-snapshot.ts     # Build-time: pre-bake the sandbox snapshot
 public/
   compositions/
-    product-promo/       # The bundled example composition
+    ui-3d-reveal/        # The bundled example composition
       index.html
       compositions/*.html
-      assets/*.svg
 ```
 
 ## Swapping the composition
 
 1. Drop your composition bundle into `public/compositions/<your-name>/`.
-2. Update `COMPOSITION_SRC` / `COMPOSITION_WIDTH` / `COMPOSITION_HEIGHT` at the top of `app/page.tsx`.
-3. Update `COMPOSITION_DIR` in `app/api/render/route.ts`.
-
-### Nested compositions need the runtime script
-
-If your composition uses `data-composition-src` to lazy-load child scenes (e.g. `registry/examples/product-promo` in the HyperFrames repo), add the runtime script tag to your composition's top-level `index.html` right before `</body>`:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@hyperframes/core/dist/hyperframe.runtime.iife.js"></script>
-```
-
-This is a workaround for [heygen-com/hyperframes#359](https://github.com/heygen-com/hyperframes/pull/359); once that ships in `@hyperframes/player`, the workaround can be removed.
+2. Update `PREVIEW_COMPOSITION_DIR` at the top of `lib/preview.ts` (used by both preview and render).
+3. Optionally update `COMPOSITION_WIDTH` / `COMPOSITION_HEIGHT` at the top of `app/page.tsx` to match your composition's dimensions.
 
 ## Pricing
 

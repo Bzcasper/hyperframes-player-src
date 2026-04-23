@@ -9,7 +9,7 @@ export const PREVIEW_COMPOSITION_DIR = join(
   process.cwd(),
   "public",
   "compositions",
-  "product-promo",
+  "ui-3d-reveal",
 );
 
 const execFileAsync = promisify(execFile);
@@ -39,8 +39,13 @@ export class PreviewNotFoundError extends Error {
   }
 }
 
+export const PREVIEW_RUNTIME_ALIASES = [
+  "hyperframe-runtime.js",
+  "hyperframe.runtime.iife.js",
+] as const;
+
 export function isPreviewRuntimeAliasPath(path: string): boolean {
-  return path === "hyperframe-runtime.js" || path === "hyperframe.runtime.iife.js";
+  return (PREVIEW_RUNTIME_ALIASES as readonly string[]).includes(path);
 }
 
 function resolvePreviewPath(path: string): string {
@@ -110,7 +115,7 @@ function rewriteSubCompositionPaths(content: string, compPath: string): string {
 }
 
 export async function getPreviewHtml(): Promise<string> {
-  const bundledHtml = await tryBundlePreviewHtml();
+  const bundledHtml = await getBundledPreviewHtml();
   if (bundledHtml) {
     return normalizePreviewHtml(bundledHtml);
   }
@@ -119,7 +124,14 @@ export async function getPreviewHtml(): Promise<string> {
   return normalizePreviewHtml(file.content.toString("utf8"));
 }
 
-async function tryBundlePreviewHtml(): Promise<string | null> {
+let bundledHtmlPromise: Promise<string | null> | null = null;
+
+function getBundledPreviewHtml(): Promise<string | null> {
+  if (!bundledHtmlPromise) bundledHtmlPromise = bundlePreviewHtml();
+  return bundledHtmlPromise;
+}
+
+async function bundlePreviewHtml(): Promise<string | null> {
   try {
     const tsxBin = join(process.cwd(), "node_modules", ".bin", "tsx");
     const bundlerScript = join(process.cwd(), "scripts", "bundle-preview.ts");
@@ -128,7 +140,8 @@ async function tryBundlePreviewHtml(): Promise<string | null> {
       maxBuffer: 20 * 1024 * 1024,
     });
     return stdout || null;
-  } catch {
+  } catch (err) {
+    console.warn("[preview] bundler failed, falling back to raw index.html:", err instanceof Error ? err.message : err);
     return null;
   }
 }

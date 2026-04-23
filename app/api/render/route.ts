@@ -1,28 +1,14 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
-import { join } from "node:path";
 import { collectFiles, renderInSandbox } from "@/lib/sandbox";
+import { PREVIEW_COMPOSITION_DIR } from "@/lib/preview";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const COMPOSITION_DIR = join(
-  process.cwd(),
-  "public",
-  "compositions",
-  "product-promo",
-);
-
-let cachedFiles: ReadonlyArray<{ rel: string; content: Buffer }> | null = null;
-
-async function getCompositionFiles() {
-  if (!cachedFiles) cachedFiles = await collectFiles(COMPOSITION_DIR);
-  return cachedFiles;
-}
-
 export async function POST() {
   try {
-    const files = await getCompositionFiles();
+    const files = await collectFiles(PREVIEW_COMPOSITION_DIR);
     const { mp4 } = await renderInSandbox(files);
 
     const blob = await put("renders/render.mp4", mp4, {

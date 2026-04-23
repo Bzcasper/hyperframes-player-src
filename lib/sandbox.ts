@@ -15,13 +15,22 @@ export interface RenderResult {
   durationMs: number;
 }
 
-/**
- * Install system dependencies and the hyperframes CLI inside a sandbox.
- * Shared between snapshot creation (build time) and fresh-sandbox fallback (local dev).
- */
+type RunCommandOpts = Parameters<Sandbox["runCommand"]>[0];
+
+export async function runSandboxCommand(
+  sandbox: Sandbox,
+  label: string,
+  opts: RunCommandOpts,
+): Promise<void> {
+  const result = await sandbox.runCommand(opts);
+  if (result.exitCode !== 0) {
+    throw new Error(`${label} failed (exit ${result.exitCode}):\n${await result.stderr()}`);
+  }
+}
+
 export async function prepareSandbox(sandbox: Sandbox): Promise<void> {
-  const [dnf, install] = await Promise.all([
-    sandbox.runCommand({
+  await Promise.all([
+    runSandboxCommand(sandbox, "dnf install", {
       cmd: "dnf",
       args: [
         "install", "-y", "--setopt=install_weak_deps=False",
@@ -32,7 +41,7 @@ export async function prepareSandbox(sandbox: Sandbox): Promise<void> {
       ],
       sudo: true,
     }),
-    sandbox.runCommand({
+    runSandboxCommand(sandbox, "npm install", {
       cmd: "npm",
       args: [
         "install", "--no-save", "--no-audit", "--no-fund",
@@ -40,21 +49,12 @@ export async function prepareSandbox(sandbox: Sandbox): Promise<void> {
       ],
     }),
   ]);
-  if (dnf.exitCode !== 0) {
-    throw new Error(`dnf install failed (exit ${dnf.exitCode}):\n${await dnf.stderr()}`);
-  }
-  if (install.exitCode !== 0) {
-    throw new Error(`npm install failed (exit ${install.exitCode}):\n${await install.stderr()}`);
-  }
 
-  const link = await sandbox.runCommand({
+  await runSandboxCommand(sandbox, "ffmpeg symlink", {
     cmd: "ln",
     args: ["-sf", "/vercel/sandbox/node_modules/ffmpeg-static/ffmpeg", "/usr/local/bin/ffmpeg"],
     sudo: true,
   });
-  if (link.exitCode !== 0) {
-    throw new Error(`ffmpeg symlink failed (exit ${link.exitCode}):\n${await link.stderr()}`);
-  }
 }
 
 export async function createFreshSetupSandbox(): Promise<Sandbox> {
@@ -95,7 +95,6 @@ async function restoreOrCreate(): Promise<Sandbox> {
   if (deploymentId && token) {
     try {
       const snapshotId = await readSnapshotId(deploymentId, token);
-      console.log(`[sandbox] restoring snapshot ${snapshotId}`);
       return await Sandbox.create({
         source: { type: "snapshot", snapshotId },
         timeout: RENDER_TIMEOUT_MS,
@@ -120,9 +119,6 @@ export async function renderInSandbox(compositionFiles: ReadonlyArray<{ rel: str
   const sandbox = await restoreOrCreate();
 
   try {
-    console.log(`[sandbox] id=${sandbox.sandboxId}`);
-
-    console.log(`[sandbox] writing ${compositionFiles.length} composition files`);
     await sandbox.writeFiles(
       compositionFiles.map(({ rel, content }) => ({
         path: `composition/${rel}`,
@@ -130,8 +126,7 @@ export async function renderInSandbox(compositionFiles: ReadonlyArray<{ rel: str
       })),
     );
 
-    console.log("[sandbox] rendering");
-    const render = await sandbox.runCommand({
+    await runSandboxCommand(sandbox, "render", {
       cmd: "npx",
       args: [
         "--no-install", "hyperframes", "render", "composition",
@@ -139,15 +134,10 @@ export async function renderInSandbox(compositionFiles: ReadonlyArray<{ rel: str
         "--workers", "auto",
       ],
     });
-    if (render.exitCode !== 0) {
-      throw new Error(`render failed (exit ${render.exitCode}):\n${await render.stderr()}`);
-    }
 
     const mp4 = await sandbox.readFileToBuffer({ path: "out.mp4" });
     if (!mp4) throw new Error("render produced no out.mp4");
-    const durationMs = Date.now() - t0;
-    console.log(`[sandbox] done in ${Math.round(durationMs / 1000)}s`);
-    return { mp4, durationMs };
+    return { mp4, durationMs: Date.now() - t0 };
   } finally {
     await sandbox.stop().catch(() => {});
   }
@@ -167,4 +157,4 @@ export async function collectFiles(
   );
 }
 
-export { SNAPSHOT_SETUP_TIMEOUT_MS, SNAPSHOT_TTL_MS };
+export { SNAPSHOT_TTL_MS };

@@ -1,6 +1,7 @@
 import {
   createFreshSetupSandbox,
   prepareSandbox,
+  runSandboxCommand,
   SNAPSHOT_TTL_MS,
   writeSnapshotPointer,
 } from "../lib/sandbox";
@@ -21,13 +22,10 @@ async function main() {
     await prepareSandbox(sandbox);
 
     console.log("[create-snapshot] downloading Chrome Headless Shell");
-    const browser = await sandbox.runCommand({
+    await runSandboxCommand(sandbox, "browser download", {
       cmd: "npx",
       args: ["--no-install", "hyperframes", "browser", "ensure"],
     });
-    if (browser.exitCode !== 0) {
-      throw new Error(`browser download failed (exit ${browser.exitCode}):\n${await browser.stderr()}`);
-    }
 
     console.log("[create-snapshot] taking snapshot");
     const snapshot = await sandbox.snapshot({ expiration: SNAPSHOT_TTL_MS });

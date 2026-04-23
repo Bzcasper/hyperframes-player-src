@@ -11,16 +11,16 @@ import {
   isPreviewRuntimeAliasPath,
 } from "@/lib/preview";
 
-test("preview constants point at the product promo composition", () => {
+test("preview constants point at the bundled composition", () => {
   assert.equal(PREVIEW_BASE_PATH, "/api/preview/");
-  assert.match(PREVIEW_COMPOSITION_DIR, /public\/compositions\/product-promo$/);
+  assert.match(PREVIEW_COMPOSITION_DIR, /public\/compositions\/[^/]+$/);
   assert.equal(HYPERFRAMES_RUNTIME_URL, "/api/runtime.js");
 });
 
-test("preview runtime aliases match the imported zip artifact", () => {
+test("preview runtime aliases match the hyperframes runtime filenames", () => {
   assert.equal(isPreviewRuntimeAliasPath("hyperframe-runtime.js"), true);
   assert.equal(isPreviewRuntimeAliasPath("hyperframe.runtime.iife.js"), true);
-  assert.equal(isPreviewRuntimeAliasPath("compositions/scene1-logo-intro.html"), false);
+  assert.equal(isPreviewRuntimeAliasPath("compositions/anything.html"), false);
 });
 
 test("getPreviewHtml injects the preview base and runtime script", async () => {
@@ -41,28 +41,19 @@ test("getPreviewHtml strips the raw runtime tag before reinjecting the pinned pr
   assert.doesNotMatch(html, /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@hyperframes\/core\/dist\/hyperframe\.runtime\.iife\.js"><\/script>/);
 });
 
-test("getPreviewHtml serves bundled preview output", async () => {
-  const html = await getPreviewHtml();
-
-  assert.doesNotMatch(html, /data-composition-src=/);
-  assert.match(html, /\[data-composition-id="scene1-logo-intro"\] \.canvas/);
-  assert.match(html, /\[data-composition-id="scene2-4-canvas"\]/);
-  assert.match(html, /\[data-composition-id="scene5-logo-outro"\] \.canvas/);
-});
-
 test("getCompositionPreviewHtml serves nested composition html with preview base and runtime", async () => {
-  const html = await getCompositionPreviewHtml("compositions/scene1-logo-intro.html");
+  const html = await getCompositionPreviewHtml("compositions/ui-3d-reveal.html");
 
   assert.match(html, /<base href="\/api\/preview\/">/);
-  assert.match(html, /data-composition-id="scene1-logo-intro"/);
+  assert.match(html, /data-composition-id="ui-3d-reveal"/);
   assert.match(html, /data-hyperframes-preview-runtime="1"/);
 });
 
 test("getPreviewFile serves static asset bytes with a content type", async () => {
-  const file = await getPreviewFile("assets/figma-cursors.svg");
+  const file = await getPreviewFile("index.html");
 
-  assert.equal(file.contentType, "image/svg+xml");
-  assert.match(file.content.toString("utf8"), /<svg/i);
+  assert.equal(file.contentType, "text/html; charset=utf-8");
+  assert.match(file.content.toString("utf8"), /<!doctype html>/i);
 });
 
 test("getPreviewFile rejects missing files", async () => {

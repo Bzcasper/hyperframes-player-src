@@ -1,44 +1,37 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { NextRequest, NextResponse } from "next/server";
-import { HYPERFRAMES_RUNTIME_URL } from "@/lib/preview";
+import { NextResponse } from "next/server";
 
-function loadLocalRuntime(): string | null {
-  const candidates = [
-    join(process.cwd(), "node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"),
-    join(process.cwd(), "../../node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"),
-  ];
+const CANDIDATES = [
+  join(process.cwd(), "node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"),
+  join(process.cwd(), "../../node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"),
+];
 
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) {
-      return readFileSync(candidate, "utf-8");
+let cached: Promise<string | null> | null = null;
+
+async function loadRuntime(): Promise<string | null> {
+  for (const path of CANDIDATES) {
+    try {
+      return await readFile(path, "utf-8");
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
   }
-
   return null;
 }
 
-export function GET(req: NextRequest) {
-  if (
-    HYPERFRAMES_RUNTIME_URL === "/api/runtime.js"
-    || HYPERFRAMES_RUNTIME_URL === "/hyperframe.runtime.iife.js"
-    || HYPERFRAMES_RUNTIME_URL === "/hyperframe-runtime.js"
-  ) {
-    const runtime = loadLocalRuntime();
-    if (runtime) {
-      return new NextResponse(runtime, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/javascript; charset=utf-8",
-          "Cache-Control": "public, max-age=3600",
-        },
-      });
-    }
+export async function GET() {
+  if (!cached) cached = loadRuntime();
+  const runtime = await cached;
+
+  if (!runtime) {
+    return new NextResponse("hyperframes runtime not found", { status: 404 });
   }
 
-  const runtimeUrl = new URL(HYPERFRAMES_RUNTIME_URL, req.url);
-  return NextResponse.redirect(runtimeUrl, {
-    status: 302,
-    headers: { "Cache-Control": "public, max-age=3600" },
+  return new NextResponse(runtime, {
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    },
   });
 }
