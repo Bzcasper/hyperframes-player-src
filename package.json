@@ -11,8 +11,8 @@
     "test": "tsx --test"
   },
   "dependencies": {
-    "@hyperframes/core": "^0.4.14",
-    "@hyperframes/player": "^0.4.14",
+    "@hyperframes/core": "^0.4.31",
+    "@hyperframes/player": "^0.4.31",
     "@vercel/blob": "^2.3.3",
     "@vercel/sandbox": "^1.6.0",
     "next": "^15.0.0",
