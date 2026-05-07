@@ -45,7 +45,7 @@ Then swap it into this template (see [Swapping the composition](#swapping-the-co
 
 ### The build-time snapshot
 
-Cold render of a 20s composition is ~70 seconds. Most of that time is the actual Chromium render — not setup — because we pre-bake a sandbox **snapshot** at build time instead of installing dependencies on every request.
+Cold render of the bundled ~11s composition is roughly 40 seconds. Most of that time is the actual Chromium render — not setup — because we pre-bake a sandbox **snapshot** at build time instead of installing dependencies on every request.
 
 `scripts/create-snapshot.ts` runs as part of `next build`:
 
@@ -100,7 +100,7 @@ public/
 
 ## Pricing
 
-[Vercel Sandbox pricing](https://vercel.com/docs/vercel-sandbox/pricing) — Pro plans include \$20/mo in Sandbox credit. At ~70s per render on 4 vCPUs, that covers roughly a hundred renders/month of the bundled 20-second example. Snapshot storage (the ~650 MB snapshot per deployment) is included in Sandbox pricing.
+[Vercel Sandbox pricing](https://vercel.com/docs/vercel-sandbox/pricing) — Pro plans include \$20/mo in Sandbox credit. At ~40s per render on 4 vCPUs, that covers a couple hundred renders/month of the bundled ~11-second example. Snapshot storage (the ~650 MB snapshot per deployment) is included in Sandbox pricing.
 
 ## License
 
