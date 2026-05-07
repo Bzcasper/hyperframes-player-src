@@ -9,7 +9,7 @@ export const PREVIEW_COMPOSITION_DIR = join(
   process.cwd(),
   "public",
   "compositions",
-  "ui-3d-reveal",
+  "vercel-intro",
 );
 
 const execFileAsync = promisify(execFile);

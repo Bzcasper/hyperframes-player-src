@@ -4,7 +4,7 @@ Preview HTML-based video compositions in the browser and render MP4s server-side
 
 [HyperFrames](https://github.com/heygen-com/hyperframes) is an open-source video rendering framework: write HTML + CSS + GSAP, get a reproducible MP4.
 
-![Template preview showing the UI 3D Reveal composition playing in the browser](./docs/preview.png)
+![Template preview showing the Vercel intro composition playing in the browser](./docs/preview.png)
 
 **Live demo:** [hyperframes-on-vercel.vercel.app](https://hyperframes-on-vercel.vercel.app)
 
@@ -16,7 +16,7 @@ Deploying provisions a Vercel Blob store; `BLOB_READ_WRITE_TOKEN` is injected au
 
 ## What this template does
 
-- **Preview** a bundled composition (`ui-3d-reveal`) in the browser using `<hyperframes-player>`, the zero-dependency web component from `@hyperframes/player`.
+- **Preview** a bundled composition (`vercel-intro`) in the browser using `<hyperframes-player>`, the zero-dependency web component from `@hyperframes/player`.
 - **Render** the composition to an MP4 by POSTing to `/api/render`. The route restores a pre-baked Vercel Sandbox, runs `hyperframes render`, uploads the MP4 to Vercel Blob, and returns a public URL.
 
 **Authoring happens locally.** This template ships with one pre-authored composition. To build your own, use the HyperFrames CLI on your machine:
@@ -87,9 +87,9 @@ scripts/
   create-snapshot.ts     # Build-time: pre-bake the sandbox snapshot
 public/
   compositions/
-    ui-3d-reveal/        # The bundled example composition
+    vercel-intro/        # The bundled example composition
       index.html
-      compositions/*.html
+      assets/
 ```
 
 ## Swapping the composition

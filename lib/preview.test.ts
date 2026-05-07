@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import {
   getPreviewHtml,
   getPreviewFile,
-  getCompositionPreviewHtml,
   PREVIEW_BASE_PATH,
   PREVIEW_COMPOSITION_DIR,
   HYPERFRAMES_RUNTIME_URL,
@@ -39,14 +38,6 @@ test("getPreviewHtml strips the raw runtime tag before reinjecting the pinned pr
 
   assert.equal(runtimeMatches.length, 1);
   assert.doesNotMatch(html, /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@hyperframes\/core\/dist\/hyperframe\.runtime\.iife\.js"><\/script>/);
-});
-
-test("getCompositionPreviewHtml serves nested composition html with preview base and runtime", async () => {
-  const html = await getCompositionPreviewHtml("compositions/ui-3d-reveal.html");
-
-  assert.match(html, /<base href="\/api\/preview\/">/);
-  assert.match(html, /data-composition-id="ui-3d-reveal"/);
-  assert.match(html, /data-hyperframes-preview-runtime="1"/);
 });
 
 test("getPreviewFile serves static asset bytes with a content type", async () => {
