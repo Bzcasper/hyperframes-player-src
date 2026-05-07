@@ -45,16 +45,23 @@ export async function prepareSandbox(sandbox: Sandbox): Promise<void> {
       cmd: "npm",
       args: [
         "install", "--no-save", "--no-audit", "--no-fund",
-        "hyperframes@latest", "ffmpeg-static",
+        "hyperframes@latest", "ffmpeg-static", "ffprobe-static",
       ],
     }),
   ]);
 
-  await runSandboxCommand(sandbox, "ffmpeg symlink", {
-    cmd: "ln",
-    args: ["-sf", "/vercel/sandbox/node_modules/ffmpeg-static/ffmpeg", "/usr/local/bin/ffmpeg"],
-    sudo: true,
-  });
+  await Promise.all([
+    runSandboxCommand(sandbox, "ffmpeg symlink", {
+      cmd: "ln",
+      args: ["-sf", "/vercel/sandbox/node_modules/ffmpeg-static/ffmpeg", "/usr/local/bin/ffmpeg"],
+      sudo: true,
+    }),
+    runSandboxCommand(sandbox, "ffprobe symlink", {
+      cmd: "ln",
+      args: ["-sf", "/vercel/sandbox/node_modules/ffprobe-static/bin/linux/x64/ffprobe", "/usr/local/bin/ffprobe"],
+      sudo: true,
+    }),
+  ]);
 }
 
 export async function createFreshSetupSandbox(): Promise<Sandbox> {

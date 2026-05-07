@@ -51,8 +51,8 @@ Cold render of the bundled ~11s composition is roughly 40 seconds. Most of that 
 
 1. Spin up a fresh `node22` sandbox
 2. `dnf install` Chromium system libraries (`nss`, `libXcomposite`, `pango`, …)
-3. `npm install hyperframes ffmpeg-static`
-4. Symlink `ffmpeg-static/ffmpeg` to `/usr/local/bin/ffmpeg`
+3. `npm install hyperframes ffmpeg-static ffprobe-static`
+4. Symlink `ffmpeg-static/ffmpeg` and `ffprobe-static/bin/linux/x64/ffprobe` into `/usr/local/bin/`
 5. `npx hyperframes browser ensure` to download chrome-headless-shell
 6. `sandbox.snapshot({ expiration: 7 days })` and write the snapshot ID to a pointer blob at `snapshot-cache/<deployment_id>.json`
 
