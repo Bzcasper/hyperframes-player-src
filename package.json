@@ -13,13 +13,15 @@
   "dependencies": {
     "@hyperframes/core": "^0.5.3",
     "@hyperframes/player": "^0.5.3",
+    "@tailwindcss/postcss": "^4.3.0",
     "@vercel/blob": "^2.3.3",
     "@vercel/kv": "^3.0.0",
     "@vercel/sandbox": "^1.6.0",
     "next": "^15.0.0",
     "pg": "^8.21.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
