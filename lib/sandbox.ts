@@ -77,6 +77,7 @@ export async function writeSnapshotPointer(params: {
     pointerKey(params.deploymentId),
     JSON.stringify({ snapshotId: params.snapshotId }),
     {
+      access: "private",
       contentType: "application/json",
       addRandomSuffix: false,
       allowOverwrite: true,
@@ -86,7 +87,7 @@ export async function writeSnapshotPointer(params: {
 }
 
 async function readSnapshotId(deploymentId: string, token: string): Promise<string> {
-  const result = await get(pointerKey(deploymentId), { token });
+  const result = await get(pointerKey(deploymentId), { access: "private", token });
   if (!result || result.statusCode !== 200) {
     throw new Error(`snapshot pointer missing for deployment ${deploymentId}`);
   }
