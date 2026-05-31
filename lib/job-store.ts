@@ -75,7 +75,7 @@ export const stageProgressPct: Record<JobStatus, number> = {
   encoding:      88,
   assembling:    94,
   uploading:     97,
-  complete:      100,
+  done:          100,
   failed:        0,
   cancelled:     0,
 };
