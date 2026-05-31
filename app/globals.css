@@ -512,6 +512,105 @@ a {
   font-size: 11px;
 }
 
+/* ============= Animation Utilities ============= */
+@layer utilities {
+  .animate-hf-glow-pulse {
+    animation: hf-glow-pulse 2s ease-in-out infinite;
+  }
+  .animate-hf-dot-pulse {
+    animation: hf-dot-pulse 2s ease-in-out infinite;
+  }
+  .animate-hf-fade-in {
+    animation: hf-fade-in 0.3s ease-out both;
+  }
+  .animate-hf-spin {
+    animation: hf-spin 0.8s linear infinite;
+  }
+  .animate-hf-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--bg-elevated) 25%,
+      var(--bg-surface) 50%,
+      var(--bg-elevated) 75%
+    );
+    background-size: 200% 100%;
+    animation: hf-shimmer 2s linear infinite;
+  }
+}
+
+/* ============= Mobile Bottom Sheet ============= */
+.hf-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  animation: hf-fade-in 0.2s ease-out;
+}
+
+.hf-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60vh;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  z-index: 50;
+  overflow-y: auto;
+  animation: hf-fade-in 0.25s ease-out;
+  padding: 20px;
+}
+
+.hf-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.hf-sheet-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.hf-fab {
+  position: fixed;
+  bottom: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 16px rgba(108, 99, 255, 0.4);
+  z-index: 30;
+  cursor: pointer;
+  border: none;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.hf-fab-left { left: 20px; }
+.hf-fab-right { right: 20px; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
