@@ -530,6 +530,12 @@ tl.to("#scene-outro", { opacity: 0, duration: 0.8, ease: "power2.in" }, OT + 1.7
 tl.to("#progress", { width: "100%", duration: 2.5, ease: "linear" }, V2_END);
 
 window.__timelines["main"] = tl;
+
+// HyperFrames renderer bridge — required by the render CLI
+window.__hf = {
+  duration: tl.duration(),
+  seek: (t) => { tl.seek(t, false); },
+};
 </script>
 </body>
 </html>
