@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useReducer, useState, useRef, useCallback } from "react";
-import "@hyperframes/player"; // registers <hyperframes-player> custom element
 import type { RenderJob } from "@/lib/job-store";
 
 /* ───────── hyperframes-player web component declaration ───────── */
@@ -857,6 +856,11 @@ export default function StudioPage(): React.ReactElement {
   const [activeTemplate, setActiveTemplate] = useState<TemplateName>("jewelry-reveal");
   const [templateParams, setTemplateParams] = useState<Record<string, string>>({});
   const [mobileSheet, setMobileSheet] = useState<"compositions" | "jobs" | null>(null);
+
+  /* ── mount: register web component ── */
+  useEffect(() => {
+    import("@hyperframes/player");
+  }, []);
 
   /* ── mount: fetch all ── */
   useEffect(() => {
