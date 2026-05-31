@@ -81,7 +81,7 @@ test("validateCompositionHtml detects timeline ID mismatch", () => {
 test("validateCompositionHtml tolerates properly initialized timelines", () => {
   const html = `<html><body>
     <div data-composition-id="test"></div>
-    <script src="/hyperframes-runtime.js"></script>
+    <script src="/api/runtime.js"></script>
     <script>
       window.__timelines = window.__timelines || {};
       window.__timelines["test"] = gsap.timeline();

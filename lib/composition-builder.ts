@@ -380,9 +380,9 @@ export function validateCompositionHtml(html: string): string[] {
   }
 
   // Check 5: HyperFrames runtime script must be present
-  if (!html.includes("/hyperframes-runtime.js")) {
+  if (!html.includes("/api/runtime.js")) {
     errors.push(
-      "FATAL: Missing HyperFrames runtime script (/hyperframes-runtime.js)",
+      "FATAL: Missing HyperFrames runtime script (/api/runtime.js)",
     );
   }
 
@@ -411,7 +411,7 @@ export function buildCompositionHtml(spec: VideoSpec): string {
     .clip { position: absolute; visibility: hidden; }
     ${globalStyles}
   </style>
-  <script src="/hyperframes-runtime.js"></script>
+  <script src="/api/runtime.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 </head>
 <body>
