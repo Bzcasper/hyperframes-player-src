@@ -38,7 +38,7 @@ export async function GET(): Promise<NextResponse> {
   for (const job of jobs) {
     if (job.status === "queued") queued += 1;
     else if (RENDERING_STATES.has(job.status)) rendering += 1;
-    else if (job.status === "complete") done += 1;
+    else if (job.status === "done") done += 1;
     else if (job.status === "failed") failed += 1;
     else if (job.status === "cancelled") cancelled += 1;
   }
@@ -79,7 +79,7 @@ export async function GET(): Promise<NextResponse> {
       encoding:      { progressPct: 88, upstreamState: "encoding",      description: "FFmpeg codec conversion (Stage 5)" },
       assembling:    { progressPct: 94, upstreamState: "assembling",    description: "Audio/video mux + MP4 faststart (Stage 6)" },
       uploading:     { progressPct: 97, upstreamState: null,            description: "Vercel Blob PUT (our layer)" },
-      complete:      { progressPct: 100,upstreamState: "complete",      description: "Artifact ready" },
+      complete:      { progressPct: 100,upstreamState: "done",      description: "Artifact ready" },
       failed:        { progressPct: 0,  upstreamState: "failed",        description: "Render failed with diagnostics" },
       cancelled:     { progressPct: 0,  upstreamState: "cancelled",     description: "Aborted by system or spend guard" },
     },

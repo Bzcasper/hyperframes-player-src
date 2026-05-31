@@ -34,7 +34,7 @@
  *   1. GET /api/compositions → pick target composition
  *   2. POST /api/jobs → receive jobId
  *   3. Poll GET /api/jobs/<jobId> every 10s
- *   4. When finished === true && status === "complete" → use url
+ *   4. When finished === true && status === "done" → use url
  *   5. OR: provide callbackUrl at step 2 and skip polling entirely
  *
  * ENVIRONMENT VARIABLES REQUIRED:
@@ -241,7 +241,7 @@ async function runRender(id: string, composition: string): Promise<void> {
       : null;
 
     const finished = await updateJob(id, {
-      status: "complete",
+      status: "done",
       url: data.url,
       completedAt,
       durationMs,

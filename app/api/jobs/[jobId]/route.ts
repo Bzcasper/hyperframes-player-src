@@ -35,7 +35,7 @@ export async function GET(
   }
 
   const finished =
-    job.status === "complete" ||
+    job.status === "done" ||
     job.status === "failed" ||
     job.status === "cancelled";
   return NextResponse.json({ ...job, finished });

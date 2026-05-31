@@ -292,7 +292,7 @@ async function runGeneratedRender(
       : null;
 
     const finished = await updateJob(id, {
-      status: "complete",
+      status: "done",
       url: data.url,
       completedAt,
       durationMs,

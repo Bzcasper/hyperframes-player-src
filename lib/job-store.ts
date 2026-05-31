@@ -9,7 +9,7 @@ export type JobStatus =
   | "encoding"       // FFmpeg codec conversion (Stage 5)
   | "assembling"     // audio/video mux + MP4 faststart (Stage 6)
   | "uploading"      // Vercel Blob PUT (our layer)
-  | "complete"       // artifact ready, url populated
+  | "done"           // artifact ready, url populated
   | "failed"         // error, error field populated
   | "cancelled";     // aborted by system or spend guard
 
