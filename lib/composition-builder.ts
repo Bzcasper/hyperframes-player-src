@@ -431,6 +431,13 @@ ${clipsHtml}
 ${gsapBlocks}
     tl.to({}, { duration: 0.001 }, ${spec.totalDuration});
     window.__timelines["${spec.compositionId}"] = tl;
+
+    // Expose the HyperFrames renderer bridge.
+    // The hyperframes render CLI polls for window.__hf = { duration, seek }.
+    window.__hf = {
+      duration: ${spec.totalDuration},
+      seek: (t) => { tl.seek(t, false); },
+    };
   </script>
 </body>
 </html>`;

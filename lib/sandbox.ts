@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { Sandbox } from "@vercel/sandbox";
 import { get, put } from "@vercel/blob";
 
@@ -126,8 +126,20 @@ export async function renderInSandbox(compositionFiles: ReadonlyArray<{ rel: str
   const sandbox = await restoreOrCreate();
 
   try {
+    // Load and inject the HyperFrames runtime so the sandbox file
+    // server can serve it at /api/runtime.js.  Compositions generated
+    // from VideoSpec reference this path and the hyperframes renderer
+    // polls for window.__hf which the runtime initialises.
+    const runtimeBuf = await loadHyperframesRuntime();
+    const allFiles = [...compositionFiles];
+    if (runtimeBuf) {
+      allFiles.push({ rel: "api/runtime.js", content: runtimeBuf });
+    } else if (process.env.VERCEL_ENV === "production") {
+      throw new Error("hyperframes runtime not found — cannot render without /api/runtime.js");
+    }
+
     await sandbox.writeFiles(
-      compositionFiles.map(({ rel, content }) => ({
+      allFiles.map(({ rel, content }) => ({
         path: `composition/${rel}`,
         content,
       })),
@@ -148,6 +160,22 @@ export async function renderInSandbox(compositionFiles: ReadonlyArray<{ rel: str
   } finally {
     await sandbox.stop().catch(() => {});
   }
+}
+
+const HYPERFRAMES_RUNTIME_PATHS = [
+  join(process.cwd(), "node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"),
+  join(dirname(process.cwd()), "node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"),
+];
+
+async function loadHyperframesRuntime(): Promise<Buffer | null> {
+  for (const p of HYPERFRAMES_RUNTIME_PATHS) {
+    try {
+      return await readFile(p);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+    }
+  }
+  return null;
 }
 
 export async function collectFiles(

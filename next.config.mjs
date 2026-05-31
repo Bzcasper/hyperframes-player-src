@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingIncludes: {
-    "/api/render": ["./public/compositions/**/*"],
+    "/api/render": ["./public/compositions/**/*", "./node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"],
+    "/api/render-generated": ["./node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"],
+    "/api/render-job": ["./node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"],
     "/api/runtime.js": ["./node_modules/@hyperframes/core/dist/hyperframe.runtime.iife.js"],
     "/api/preview": [
       "./public/compositions/**/*",
