@@ -204,7 +204,7 @@ async function runRender(id: string, composition: string): Promise<void> {
     : "http://localhost:3000";
 
   try {
-    await updateJob(id, { status: "rendering" });
+    await updateJob(id, { status: "preprocessing" });
 
     const res = await fetch(`${origin}/api/render`, {
       method: "POST",

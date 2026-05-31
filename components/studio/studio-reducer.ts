@@ -4,7 +4,7 @@ import type { JobStatus } from "@/lib/job-store";
 /**
  * The six visible pipeline stages, in order. These mirror the real backend
  * lifecycle (validating/building happen client-side + in /api/generate; the
- * sandbox does restoring → rendering → encoding → uploading).
+ * sandbox does restoring → preprocessing → capturing → encoding → uploading).
  */
 export const GENERATION_STAGES = [
   "validating",
@@ -99,7 +99,8 @@ export function jobStatusToStage(status: JobStatus): GenerationStage | null {
       return "building";
     case "restoring":
       return "restoring";
-    case "rendering":
+    case "preprocessing":
+    case "capturing":
       return "rendering";
     case "encoding":
       return "encoding";

@@ -68,9 +68,10 @@ const STAGE_MAP: Record<
 > = {
   queued: { label: "In queue\u2026", width: 5 },
   restoring: { label: "Restoring sandbox\u2026", width: 15 },
-  rendering: { label: "Rendering frames\u2026", width: 55 },
-  encoding: { label: "Encoding MP4\u2026", width: 80 },
-  uploading: { label: "Uploading to Blob\u2026", width: 92 },
+  preprocessing: { label: "Preprocessing\u2026", width: 30 },
+  capturing: { label: "Capturing frames\u2026", width: 65 },
+  encoding: { label: "Encoding MP4\u2026", width: 85 },
+  uploading: { label: "Uploading to Blob\u2026", width: 95 },
   done: { label: "Done", width: 100 },
   failed: { label: "Failed", width: 100 },
 };
