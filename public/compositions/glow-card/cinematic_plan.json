@@ -1,0 +1,43 @@
+{
+  "version": "1.0",
+  "track": {
+    "id": "bf6e0d74-0e7e-43f3-a521-3a6e5583ad92",
+    "title": "Glow Card",
+    "concept": "dopeman"
+  },
+  "mood": "trap/flex",
+  "duration_seconds": 57.0,
+  "label": "trap flex neon \u2014 glow card",
+  "sections": [
+    {
+      "name": "intro",
+      "start_s": 0,
+      "duration_s": 5.5,
+      "camera": "static wide"
+    },
+    {
+      "name": "verse1",
+      "start_s": 5.5,
+      "duration_s": 16.0,
+      "camera": "low-angle dolly"
+    },
+    {
+      "name": "hook",
+      "start_s": 21.5,
+      "duration_s": 20.0,
+      "camera": "slashed cuts"
+    },
+    {
+      "name": "verse2",
+      "start_s": 41.5,
+      "duration_s": 13.0,
+      "camera": "slow tilt up"
+    },
+    {
+      "name": "outro",
+      "start_s": 54.5,
+      "duration_s": 2.5,
+      "camera": "static wide"
+    }
+  ]
+}

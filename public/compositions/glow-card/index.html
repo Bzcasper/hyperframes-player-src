@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: #0a0208;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+.scene {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+}
+#scene-intro { z-index: 1; background: #0a0208; }
+#scene-v1    { z-index: 2; background: #060210; opacity: 0; }
+#scene-hook  { z-index: 3; background: #0a0208; opacity: 0; }
+#scene-v2    { z-index: 4; background: #060810; opacity: 0; }
+#scene-outro { z-index: 5; background: #0a0208; opacity: 0; }
+.scene-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#bg-intro {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(180,10,30,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(90,0,160,0.10) 0%, transparent 50%);
+}
+#bg-v1 {
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(20,10,120,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 30%, rgba(180,10,30,0.08) 0%, transparent 45%);
+}
+#bg-hook {
+  background:
+    radial-gradient(ellipse at 65% 25%, rgba(180,10,30,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 75%, rgba(90,0,160,0.12) 0%, transparent 50%);
+}
+#bg-v2 {
+  background:
+    radial-gradient(ellipse at 85% 70%, rgba(0,160,200,0.15) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 25%, rgba(180,10,30,0.10) 0%, transparent 45%);
+}
+#bg-outro {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(120,6,0,0.20) 0%, transparent 60%);
+}
+.glow-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  opacity: 0;
+}
+#blob-red   { width:700px; height:400px; top:5%; right:-10%; background:radial-gradient(circle,rgba(180,10,30,0.50),transparent 70%); }
+#blob-blue  { width:500px; height:500px; top:40%; left:-15%; background:radial-gradient(circle,rgba(40,20,180,0.28),transparent 70%); }
+#blob-cyan  { width:600px; height:350px; bottom:10%; right:10%; background:radial-gradient(circle,rgba(0,180,220,0.16),transparent 70%); }
+.ghost-text {
+  position: absolute;
+  font-size: 220px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: rgba(180,10,30,0.04);
+  pointer-events: none;
+  z-index: 1;
+  white-space: nowrap;
+}
+#ghost-intro { top: 30%; left: -5%; }
+#ghost-v1    { top: 25%; right: -8%; }
+#ghost-hook  { top: 15%; left: 5%; }
+#ghost-v2    { top: 20%; right: -3%; }
+#ghost-outro { top: 35%; left: 10%; }
+.accent-rule {
+  position: absolute;
+  left: 80px;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #b01000, rgba(180,10,30,0));
+  z-index: 10;
+}
+#rule-intro  { top: 120px; }
+#rule-v1     { top: 120px; }
+#rule-hook   { top: 120px; }
+#rule-v2     { top: 120px; }
+#rule-outro  { top: 120px; }
+.title-band {
+  position: absolute;
+  top: 60px; left: 80px; right: 80px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.title-band h1 {
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255,255,255,0.88);
+  text-shadow: 0 0 40px rgba(180,10,30,0.45);
+}
+.title-tag {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #e02020;
+}
+.section-tag {
+  position: absolute;
+  top: 128px; left: 80px;
+  z-index: 10;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #e02020;
+  opacity: 0;
+}
+.lyrics-wrap {
+  position: absolute;
+  bottom: 100px; right: 80px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 20px;
+  max-width: 840px;
+}
+.lyric-line {
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+  opacity: 0;
+  letter-spacing: -0.01em;
+  text-align: right;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.9), 0 0 60px rgba(180,10,30,0.22);
+}
+.lyric-line.hi {
+  color: #ff4040;
+  text-shadow: 0 2px 30px rgba(180,10,30,0.7), 0 0 80px rgba(180,10,30,0.3);
+}
+.lyric-line.core {
+  color: #fff;
+  text-shadow: 0 0 50px rgba(255,255,255,0.3);
+  font-size: 46px;
+}
+#card-prop {
+  position: absolute;
+  top: 50%; left: 50%;
+  z-index: 6;
+  width: 420px; height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translate(-50%, -50%) rotateX(18deg) scale(0.6);
+  pointer-events: none;
+}
+.card-body {
+  width: 100%; height: 100%;
+  border-radius: 28px;
+  position: relative;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 60%, #1a0a0a 100%);
+  box-shadow:
+    0 0 60px rgba(180,10,30,0.35),
+    0 0 120px rgba(180,10,30,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  border: 2px solid rgba(180,10,30,0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.card-chip {
+  width: 58px; height: 42px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #ff3020 0%, #b01000 100%);
+  box-shadow: 0 0 30px rgba(180,10,30,0.8);
+}
+.card-label {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.9);
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(180,10,30,0.6);
+}
+#card-glow-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  z-index: 5;
+  width: 560px; height: 340px;
+  transform: translate(-50%,-50%) rotateX(18deg);
+  background: radial-gradient(ellipse, rgba(180,10,30,0.25) 0%, transparent 68%);
+  opacity: 0;
+  pointer-events: none;
+}
+#chip-pulse {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #ff2010;
+  box-shadow: 0 0 12px #ff2010, 0 0 40px rgba(180,10,30,0.6);
+  z-index: 12;
+  opacity: 0;
+}
+.meta-bar {
+  position: absolute;
+  bottom: 80px; left: 80px;
+  z-index: 10;
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.40);
+  opacity: 0;
+}
+.meta-bar span {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(180,10,30,0.3);
+}
+#grain-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+}
+#progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px; width: 0;
+  z-index: 100;
+  background: linear-gradient(90deg, #b01000, #ff3020, #ff8080);
+}
+.glitch-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+}
+#glitch-r { background: rgba(255,30,30,0.35); }
+#glitch-g { background: rgba(30,255,30,0.35); }
+#glitch-b { background: rgba(30,30,255,0.35); }
+</style>
+</head>
+<body>
+<div
+  id="root"
+  data-composition-id="main"
+  data-start="0"
+  data-duration="57"
+  data-width="1920"
+  data-height="1080"
+>
+  <div id="grain-overlay"></div>
+  <div id="glitch-r" class="glitch-overlay"></div>
+  <div id="glitch-g" class="glitch-overlay"></div>
+  <div id="glitch-b" class="glitch-overlay"></div>
+
+  <!-- SCENE 1: INTRO 0-5.5s -->
+  <div id="scene-intro" class="scene">
+    <div id="bg-intro" class="scene-bg"></div>
+    <div id="blob-red" class="glow-blob" data-layout-allow-overflow></div>
+    <div id="ghost-intro" class="ghost-text" data-layout-allow-overflow>GLOW</div>
+    <div id="rule-intro" class="accent-rule"></div>
+    <div class="title-band" id="title-intro">
+      <h1>Glow&ensp;Card</h1>
+      <div class="title-tag">TrapGod</div>
+    </div>
+    <div class="section-tag" id="tag-intro">Intro</div>
+    <div class="lyrics-wrap" id="lyrics-intro">
+      <div class="lyric-line clip" id="ll0" data-start="0.9" data-duration="1.6" data-track-index="1">Matte black peel like a sticker off the stack</div>
+      <div class="lyric-line clip" id="ll1" data-start="1.05" data-duration="4.45" data-track-index="2">Chip hit the wet asphalt, red flash like a heart slash</div>
+    </div>
+    <div class="meta-bar" id="meta-intro">
+      <span>Track 01</span>
+      <span>57s</span>
+      <span>Trap/Flex</span>
+    </div>
+  </div>
+  <!-- SCENE 2: VERSE 1 5.5-21.5s -->
+  <div id="scene-v1" class="scene">
+    <div id="bg-v1" class="scene-bg"></div>
+    <div id="blob-blue" class="glow-blob" data-layout-allow-overflow></div>
+    <div id="ghost-v1" class="ghost-text" data-layout-allow-overflow>GHOST</div>
+    <div id="rule-v1" class="accent-rule"></div>
+    <div class="title-band" id="title-v1">
+      <h1>Glow&ensp;Card</h1>
+      <div class="title-tag">Verse 1</div>
+    </div>
+    <div class="section-tag" id="tag-v1">Verse 1</div>
+    <div class="lyrics-wrap" id="lyrics-v1">
+      <div class="lyric-line clip" id="ll2" data-start="6.3" data-duration="3.2" data-track-index="3">Dope-slow ghost in the cut, shadow-man</div>
+      <div class="lyric-line clip" id="ll3" data-start="9.6" data-duration="3.2" data-track-index="3">Suicide doors, velvet hold the phantom glow</div>
+      <div class="lyric-line clip" id="ll4" data-start="12.9" data-duration="3.2" data-track-index="3">Rearview flicker, faulty glare, red chip stare</div>
+      <div class="lyric-line clip" id="ll5" data-start="16.2" data-duration="5.3" data-track-index="3">Black card tap, devil know the script it write</div>
+    </div>
+    <div class="meta-bar" id="meta-v1">
+      <span>L.A.</span>
+      <span>Low-angle</span>
+    </div>
+  </div>
+
+  <!-- SCENE 3: HOOK 21.5-41.5s -->
+  <div id="scene-hook" class="scene">
+    <div id="bg-hook" class="scene-bg"></div>
+    <div id="blob-red" class="glow-blob" data-layout-allow-overflow></div>
+    <div id="ghost-hook" class="ghost-text" data-layout-allow-overflow>SWIPE</div>
+    <div id="rule-hook" class="accent-rule"></div>
+    <div class="title-band" id="title-hook">
+      <h1>Glow&ensp;Card</h1>
+      <div class="title-tag">Hook</div>
+    </div>
+    <div class="section-tag" id="tag-hook">Hook</div>
+    <div id="card-glow-ring"></div>
+    <div id="card-prop">
+      <div class="card-body">
+        <div class="card-chip"></div>
+        <div class="card-label">GLOW</div>
+      </div>
+    </div>
+    <div id="chip-pulse"></div>
+    <div class="lyrics-wrap" id="lyrics-hook">
+      <div class="lyric-line hi clip" id="ll6" data-start="22.5" data-duration="2.5" data-track-index="4">Matte black card, no name on it</div>
+      <div class="lyric-line hi clip" id="ll7" data-start="25.0" data-duration="2.5" data-track-index="4">Just a chip that glows when I swipe the night</div>
+      <div class="lyric-line clip" id="ll8" data-start="27.5" data-duration="2.5" data-track-index="4">Late night flex, but my soul's in hock</div>
+      <div class="lyric-line clip" id="ll9" data-start="30.0" data-duration="2.5" data-track-index="4">Every time that red light blink, I'm losin' stock</div>
+      <div class="lyric-line clip" id="ll10" data-start="32.5" data-duration="2.5" data-track-index="4">Plastic sin, yeah, the devil's ink</div>
+      <div class="lyric-line core clip" id="ll11" data-start="35.0" data-duration="6.5" data-track-index="4">Glow card (glow!), yeah, we lit!</div>
+    </div>
+    <div class="meta-bar" id="meta-hook">
+      <span>Red Chip</span>
+      <span>Slashed Cuts</span>
+    </div>
+  </div>
+  <!-- SCENE 4: VERSE 2 41.5-54.5s -->
+  <div id="scene-v2" class="scene">
+    <div id="bg-v2" class="scene-bg"></div>
+    <div id="blob-cyan" class="glow-blob" data-layout-allow-overflow></div>
+    <div id="ghost-v2" class="ghost-text" data-layout-allow-overflow>MIAMI</div>
+    <div id="rule-v2" class="accent-rule"></div>
+    <div class="title-band" id="title-v2">
+      <h1>Glow&ensp;Card</h1>
+      <div class="title-tag">Verse 2</div>
+    </div>
+    <div class="section-tag" id="tag-v2">Verse 2</div>
+    <div class="lyrics-wrap" id="lyrics-v2">
+      <div class="lyric-line clip" id="ll12" data-start="42.6" data-duration="1.04" data-track-index="5">Jet tarmac, Bugatti parked, headlights spark</div>
+      <div class="lyric-line clip" id="ll13" data-start="43.65" data-duration="1.04" data-track-index="5">Cash in the wind, engines shred, red chip embed</div>
+      <div class="lyric-line clip" id="ll14" data-start="44.7" data-duration="1.04" data-track-index="5">VIP booth, dancer's heel got the chip stuck tight</div>
+      <div class="lyric-line clip" id="ll15" data-start="45.75" data-duration="1.04" data-track-index="5">She don't see, but I pocket the glow, dim like a sigh</div>
+      <div class="lyric-line clip" id="ll16" data-start="46.8" data-duration="1.04" data-track-index="5">808 drop shakes the velvet, bass hums a knell</div>
+      <div class="lyric-line clip" id="ll17" data-start="47.85" data-duration="1.04" data-track-index="5">Black card swipes while the feds watch the glow swell</div>
+      <div class="lyric-line clip" id="ll18" data-start="48.9" data-duration="1.04" data-track-index="5">Foreign purr, engine growl like a phone threat</div>
+      <div class="lyric-line clip" id="ll19" data-start="49.95" data-duration="1.04" data-track-index="5">Miami wet, neon chrome, red chip's pulse set</div>
+      <div class="lyric-line clip" id="ll20" data-start="51.0" data-duration="1.04" data-track-index="5">Palm tree sway, 4 AM, chip pressed like a brand</div>
+      <div class="lyric-line clip" id="ll21" data-start="52.05" data-duration="2.45" data-track-index="5">Dark jewel lit in the passenger hand</div>
+    </div>
+    <div class="meta-bar" id="meta-v2">
+      <span>Miami</span>
+      <span>Neon</span>
+    </div>
+  </div>
+
+  <!-- SCENE 5: OUTRO 54.5-57s -->
+  <div id="scene-outro" class="scene">
+    <div id="bg-outro" class="scene-bg"></div>
+    <div id="blob-blue" class="glow-blob" data-layout-allow-overflow></div>
+    <div id="ghost-outro" class="ghost-text" data-layout-allow-overflow>LIT</div>
+    <div id="rule-outro" class="accent-rule"></div>
+    <div class="title-band" id="title-outro">
+      <h1>Glow&ensp;Card</h1>
+      <div class="title-tag">Outro</div>
+    </div>
+    <div class="lyrics-wrap" id="lyrics-outro">
+      <div class="lyric-line core clip" id="ll22" data-start="55.0" data-duration="0.29" data-track-index="6">Glow card</div>
+      <div class="lyric-line core clip" id="ll23" data-start="55.3" data-duration="1.7" data-track-index="6">Yeah, we lit!</div>
+    </div>
+  </div>
+
+  <div id="progress"></div>
+</div>
+<script>
+window.__timelines = window.__timelines || {};
+var tl = gsap.timeline({ paused: true });
+
+var INTRO_END = 5.5;
+var V1_END    = 21.5;
+var HOOK_END  = 41.5;
+var V2_END    = 54.5;
+
+// ═══ SCENE 1: INTRO ═══
+tl.fromTo("#blob-red", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1.08, duration: 4.5, ease: "sine.inOut", yoyo: true, repeat: 1, overwrite: "auto" }, 0.2);
+tl.fromTo("#ghost-intro", { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 3.0, ease: "power1.out" }, 0.1);
+tl.fromTo("#rule-intro", { width: 0 }, { width: 320, duration: 0.6, ease: "expo.out" }, 0.2);
+tl.fromTo("#title-intro h1", { x: -80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 0.3);
+tl.fromTo("#title-intro .title-tag", { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 0.5);
+tl.fromTo("#tag-intro", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 0.6);
+tl.fromTo("#ll0", { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 0.9);
+tl.fromTo("#ll1", { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.50, ease: "power2.out" }, 1.05);
+tl.fromTo("#meta-intro", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 1.2);
+tl.set("#progress", { width: "0%" }, 0);
+tl.to("#progress", { width: "9.6%", duration: INTRO_END, ease: "linear", overwrite: "auto" }, 0);
+
+// ═══ TRANSITION: INTRO → V1 — Glitch ═══
+var T1 = INTRO_END - 0.2;
+tl.set("#glitch-r", { opacity: 0.35, x: 40, y: -8 }, T1);
+tl.set("#glitch-g", { opacity: 0.35, x: -30, y: 12 }, T1);
+tl.set("#glitch-b", { opacity: 0.35, x: 15, y: -20 }, T1);
+tl.to("#scene-intro", { x: -15, duration: 0.03, ease: "none" }, T1);
+tl.to("#scene-intro", { x: 25, duration: 0.03, ease: "none" }, T1 + 0.03);
+tl.to("#scene-intro", { x: -10, duration: 0.03, ease: "none" }, T1 + 0.06);
+tl.to("#scene-intro", { x: 0, duration: 0.03, ease: "none" }, T1 + 0.09);
+tl.set("#scene-v1", { opacity: 1, zIndex: 10 }, T1 + 0.12);
+tl.set("#scene-intro", { opacity: 0, zIndex: 1 }, T1 + 0.15);
+tl.set("#glitch-r", { opacity: 0 }, T1 + 0.18);
+tl.set("#glitch-g", { opacity: 0 }, T1 + 0.18);
+tl.set("#glitch-b", { opacity: 0 }, T1 + 0.18);
+// ═══ SCENE 2: VERSE 1 ═══
+var V1 = INTRO_END;
+tl.fromTo("#blob-blue", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1.06, duration: 6.0, ease: "sine.inOut", yoyo: true, repeat: 1, overwrite: "auto" }, V1 + 0.3);
+tl.fromTo("#ghost-v1", { x: 30, opacity: 0 }, { x: 0, opacity: 1, duration: 4.0, ease: "power1.out" }, V1 + 0.1);
+tl.fromTo("#rule-v1", { width: 0 }, { width: 280, duration: 0.5, ease: "expo.out" }, V1 + 0.2);
+tl.fromTo("#title-v1 h1", { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, V1 + 0.3);
+tl.fromTo("#title-v1 .title-tag", { x: 30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power2.out" }, V1 + 0.5);
+tl.fromTo("#tag-v1", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, V1 + 0.4);
+tl.fromTo("#ll2", { x: 50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, V1 + 0.8);
+tl.fromTo("#ll3", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.40, ease: "expo.out" }, V1 + 4.1);
+tl.fromTo("#ll4", { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.42, ease: "power2.out" }, V1 + 7.4);
+tl.fromTo("#ll5", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.38, ease: "back.out(1.4)" }, V1 + 10.7);
+tl.fromTo("#meta-v1", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, V1 + 1.0);
+tl.to("#progress", { width: "37.7%", duration: V1_END - INTRO_END, ease: "linear" }, INTRO_END);
+
+// ═══ TRANSITION: V1 → HOOK — Chromatic Aberration (hero reveal) ═══
+var T2 = V1_END - 0.3;
+tl.set("#glitch-r", { opacity: 0.6, x: 0 }, T2);
+tl.set("#glitch-g", { opacity: 0.6, x: 0 }, T2);
+tl.set("#glitch-b", { opacity: 0.6, x: 0 }, T2);
+tl.to("#glitch-r", { x: -80, opacity: 0.8, duration: 0.3, ease: "power2.in" }, T2);
+tl.to("#glitch-b", { x: 80, opacity: 0.8, duration: 0.3, ease: "power2.in" }, T2);
+tl.to("#glitch-g", { y: 30, duration: 0.3, ease: "power2.in" }, T2);
+tl.set("#scene-hook", { opacity: 1, zIndex: 10 }, T2 + 0.3);
+tl.set("#scene-v1", { opacity: 0, zIndex: 1 }, T2 + 0.3);
+tl.to("#glitch-r", { x: 0, opacity: 0, duration: 0.15, ease: "power2.out" }, T2 + 0.3);
+tl.to("#glitch-b", { x: 0, opacity: 0, duration: 0.15, ease: "power2.out" }, T2 + 0.3);
+tl.to("#glitch-g", { y: 0, opacity: 0, duration: 0.15, ease: "power2.out" }, T2 + 0.3);
+// ═══ SCENE 3: HOOK ═══
+var HK = V1_END;
+tl.fromTo("#blob-red", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1.1, duration: 5.0, ease: "sine.inOut", yoyo: true, repeat: 1, overwrite: "auto" }, HK + 0.3);
+tl.fromTo("#ghost-hook", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 3.5, ease: "power1.out" }, HK + 0.1);
+tl.fromTo("#rule-hook", { width: 0 }, { width: 400, duration: 0.5, ease: "expo.out" }, HK + 0.2);
+tl.fromTo("#title-hook h1", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.5)" }, HK + 0.3);
+tl.fromTo("#title-hook .title-tag", { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, HK + 0.5);
+tl.fromTo("#tag-hook", { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease: "expo.out" }, HK + 0.4);
+tl.fromTo("#card-glow-ring", { opacity: 0, scale: 0.5 }, { opacity: 0.7, scale: 1.1, duration: 0.5, ease: "power2.out" }, HK + 0.6);
+tl.fromTo("#card-prop", { opacity: 0, scale: 0.6, rotationX: 18 }, { opacity: 1, scale: 1, rotationX: 0, duration: 0.7, ease: "back.out(1.5)" }, HK + 0.6);
+tl.fromTo("#chip-pulse", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1.1, duration: 0.3, ease: "power2.out", overwrite: "auto" }, HK + 0.8);
+tl.to("#chip-pulse", { opacity: 0.5, scale: 1.6, duration: 0.55, ease: "sine.inOut", yoyo: true, repeat: 11, overwrite: "auto" }, HK + 1.1);
+tl.fromTo("#ll6", { x: -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, HK + 1.0);
+tl.fromTo("#ll7", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, HK + 3.5);
+tl.fromTo("#ll8", { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.42, ease: "power2.out" }, HK + 6.0);
+tl.fromTo("#ll9", { scale: 0.85, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.38, ease: "back.out(1.3)" }, HK + 8.5);
+tl.fromTo("#ll10", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.44, ease: "power3.out" }, HK + 11.0);
+tl.fromTo("#ll11", { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(2)" }, HK + 13.5);
+tl.fromTo("#meta-hook", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, HK + 1.2);
+tl.to("#progress", { width: "72.8%", duration: HOOK_END - V1_END, ease: "linear" }, V1_END);
+// ═══ TRANSITION: HOOK → V2 — Zoom Through ═══
+var T3 = HOOK_END - 0.2;
+tl.to("#scene-hook", { scale: 2.5, opacity: 0, filter: "blur(8px)", duration: 0.4, ease: "power3.in" }, T3);
+tl.fromTo("#scene-v2", { scale: 0.5, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, T3 + 0.15);
+
+// ═══ SCENE 4: VERSE 2 ═══
+var V2 = HOOK_END;
+tl.fromTo("#blob-cyan", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1.08, duration: 5.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, V2 + 0.3);
+tl.fromTo("#ghost-v2", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 4.5, ease: "power1.out" }, V2 + 0.1);
+tl.fromTo("#rule-v2", { width: 0 }, { width: 350, duration: 0.5, ease: "expo.out" }, V2 + 0.2);
+tl.fromTo("#title-v2 h1", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, V2 + 0.3);
+tl.fromTo("#title-v2 .title-tag", { x: 30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, V2 + 0.5);
+tl.fromTo("#tag-v2", { x: 20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, V2 + 0.4);
+tl.fromTo("#ll12", { x: 50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease: "power3.out" }, V2 + 1.1);
+tl.fromTo("#ll13", { y: 25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "expo.out" }, V2 + 2.15);
+tl.fromTo("#ll14", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.33, ease: "power2.out" }, V2 + 3.2);
+tl.fromTo("#ll15", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.30, ease: "back.out(1.2)" }, V2 + 4.25);
+tl.fromTo("#ll16", { x: 45, opacity: 0 }, { x: 0, opacity: 1, duration: 0.34, ease: "power3.out" }, V2 + 5.3);
+tl.fromTo("#ll17", { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.31, ease: "power2.out" }, V2 + 6.35);
+tl.fromTo("#ll18", { x: -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.36, ease: "expo.out" }, V2 + 7.4);
+tl.fromTo("#ll19", { scale: 0.85, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.28, ease: "back.out(1.5)" }, V2 + 8.45);
+tl.fromTo("#ll20", { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.32, ease: "power3.out" }, V2 + 9.5);
+tl.fromTo("#ll21", { y: 35, opacity: 0 }, { y: 0, opacity: 1, duration: 0.30, ease: "power2.out" }, V2 + 10.55);
+tl.fromTo("#meta-v2", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, V2 + 1.0);
+tl.to("#progress", { width: "95.6%", duration: V2_END - HOOK_END, ease: "linear" }, HOOK_END);
+// ═══ TRANSITION: V2 → OUTRO — Blur Crossfade (wind-down) ═══
+var T4 = V2_END - 0.3;
+tl.to("#scene-v2", { filter: "blur(10px)", scale: 1.03, opacity: 0, duration: 0.5, ease: "power2.inOut" }, T4);
+tl.fromTo("#scene-outro", { filter: "blur(10px)", scale: 0.97, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.5, ease: "power2.inOut" }, T4 + 0.1);
+
+// ═══ SCENE 5: OUTRO (final scene — exit animations allowed) ═══
+var OT = V2_END;
+tl.fromTo("#blob-blue", { opacity: 0, scale: 0.9 }, { opacity: 0.5, scale: 1.05, duration: 2.5, ease: "sine.inOut" }, OT + 0.2);
+tl.fromTo("#ghost-outro", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 2.0, ease: "power1.out" }, OT + 0.1);
+tl.fromTo("#rule-outro", { width: 0 }, { width: 200, duration: 0.5, ease: "expo.out" }, OT + 0.2);
+tl.fromTo("#title-outro h1", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, OT + 0.3);
+tl.fromTo("#title-outro .title-tag", { x: 20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, OT + 0.5);
+tl.fromTo("#ll22", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.8)" }, OT + 0.5);
+tl.fromTo("#ll23", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, OT + 0.8);
+
+// Fade to black (final scene only)
+tl.to("#scene-outro", { opacity: 0, duration: 0.8, ease: "power2.in" }, OT + 1.7);
+tl.to("#progress", { width: "100%", duration: 2.5, ease: "linear" }, V2_END);
+
+window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

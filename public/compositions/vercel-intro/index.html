@@ -1,0 +1,1518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Vercel Intro HyperFrames</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html,
+    body {
+      margin: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    #vercel-intro {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #ffffff;
+      color: #000000;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    #grid {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.55;
+      background:
+        linear-gradient(90deg, transparent calc(100% - 1px), #d7d7d7 0) 0 0 / 120px 100%,
+        linear-gradient(0deg, transparent calc(100% - 1px), #d7d7d7 0) 0 0 / 100% 120px;
+    }
+
+    #telemetry {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      opacity: 0;
+      color: #000000;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 18px;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    #telemetry span {
+      position: absolute;
+      transform: translate(-50%, -50%);
+    }
+
+    #shadow {
+      position: absolute;
+      left: 50%;
+      top: 682px;
+      width: 520px;
+      height: 1px;
+      z-index: 1;
+      opacity: 0;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, #000000, transparent);
+    }
+
+    #mark-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      opacity: 1;
+      transform-origin: 50% 50%;
+      will-change: opacity;
+    }
+
+    #shape-svg {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 768px;
+      height: 710px;
+      overflow: visible;
+      transform: translate(-50%, -50%);
+      will-change: transform;
+    }
+
+    #shape-path {
+      fill: #000000;
+    }
+
+    #vfx-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      width: 1920px;
+      height: 1080px;
+      opacity: 0;
+      background: #000000;
+      pointer-events: none;
+    }
+
+    #three-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 1920px;
+      height: 1080px;
+      opacity: 0;
+      transform: translateY(50px);
+      pointer-events: none;
+    }
+
+    #copy-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: grid;
+      place-items: end center;
+      padding: 0 150px 108px;
+      opacity: 0;
+      color: #000000;
+      pointer-events: none;
+    }
+
+    #copy-layer h1 {
+      margin: 0;
+      width: 1180px;
+      max-width: 100%;
+      font-size: 78px;
+      line-height: 0.98;
+      font-weight: 650;
+      letter-spacing: 0;
+      text-align: center;
+    }
+
+    #copy-layer span {
+      display: block;
+    }
+
+    #next-beat {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      opacity: 0;
+      color: #000000;
+      perspective: 900px;
+      transform-origin: 50% 50%;
+      will-change: opacity, transform;
+      pointer-events: none;
+    }
+
+    #beat-prefix,
+    #beat-ercel-wrap {
+      position: absolute;
+      top: 468px;
+      font-size: 104px;
+      line-height: 1;
+      font-weight: 650;
+      letter-spacing: 0;
+      white-space: nowrap;
+      will-change: transform, opacity, clip-path;
+    }
+
+    #beat-prefix {
+      left: 250px;
+      opacity: 0;
+      transform: translateX(-760px);
+    }
+
+    #hf-word,
+    #beat-now {
+      display: inline-block;
+      will-change: opacity, transform;
+    }
+
+    #beat-symbol {
+      position: relative;
+      display: inline-block;
+      width: 58px;
+      height: 118px;
+      vertical-align: top;
+    }
+
+    #beat-n,
+    #beat-plus {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: block;
+      transform-origin: 50% 50%;
+      will-change: opacity, transform;
+    }
+
+    #beat-plus {
+      left: -28px;
+      opacity: 0;
+    }
+
+    #beat-rest {
+      display: inline-block;
+      transform-origin: 0 50%;
+      will-change: opacity, transform;
+    }
+
+    #hf-word {
+      width: 700px;
+      height: 156px;
+      margin-top: -14px;
+      padding-top: 14px;
+      padding-left: 48px;
+      margin-left: -48px;
+      margin-right: 8px;
+      overflow: hidden;
+      perspective: 900px;
+      transform-style: preserve-3d;
+      vertical-align: top;
+    }
+
+    #hf-word-face,
+    #beat-ercel {
+      display: block;
+      transform-origin: 50% 50%;
+      transform-style: preserve-3d;
+      will-change: opacity, transform;
+    }
+
+    #beat-ercel-wrap {
+      left: 1302px;
+      top: 454px;
+      height: 156px;
+      padding: 14px 0 0;
+      overflow: hidden;
+      perspective: 900px;
+      transform-style: preserve-3d;
+      clip-path: inset(100% 0 0 0);
+    }
+
+    #beat-ercel {
+      transform: translateY(0);
+    }
+
+    .app-icon {
+      position: absolute;
+      top: 409px;
+      width: 172px;
+      height: 172px;
+      opacity: 0;
+      border-radius: 36px;
+      object-fit: cover;
+      box-shadow: 0 22px 54px rgba(0, 0, 0, 0.18);
+      transform-origin: 50% 50%;
+      transform-style: preserve-3d;
+      will-change: opacity, transform;
+    }
+
+    #hf-icon {
+      left: 382px;
+    }
+
+    #vercel-icon {
+      left: 1184px;
+      background: #000000;
+    }
+
+    #screen-video-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      display: block;
+      opacity: 0;
+      background: #000000;
+      overflow: hidden;
+      transform-origin: 50% 50%;
+      will-change: opacity, transform, filter;
+      pointer-events: none;
+    }
+
+    #screen-video {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000000;
+    }
+
+    #label {
+      position: absolute;
+      left: 34px;
+      bottom: 30px;
+      z-index: 8;
+      display: none;
+      color: rgba(0, 0, 0, 0.58);
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 16px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    #vercel-intro.is-dark #label {
+      color: rgba(255, 255, 255, 0.82);
+    }
+  </style>
+</head>
+<body>
+    <div id="vercel-intro" data-composition-id="vercel-intro" data-width="1920" data-height="1080" data-start="0" data-duration="11.05" data-root="true">
+    <div id="grid"></div>
+    <div id="telemetry" aria-hidden="true">
+      <span style="left:22%;top:26%;">site</span>
+      <span style="left:76%;top:30%;">[ok] iad</span>
+      <span style="left:70%;top:70%;">render</span>
+      <span style="left:28%;top:72%;">001</span>
+    </div>
+    <div id="shadow"></div>
+    <div id="mark-layer">
+      <svg id="shape-svg" viewBox="-100 -100 200 200" aria-hidden="true">
+        <path id="shape-path" d="M 0 -86.60 L 8.66 -71.60 L 17.32 -56.60 L 25.98 -41.60 L 34.64 -26.60 L 43.30 -11.60 L 51.96 3.40 L 60.62 18.40 L 69.28 33.40 L 77.94 48.40 L 86.60 63.40 L 95.26 78.40 L 98.48 86.60 L 81.16 86.60 L 63.84 86.60 L 46.52 86.60 L 29.20 86.60 L 11.88 86.60 L -5.44 86.60 L -22.76 86.60 L -40.08 86.60 L -57.40 86.60 L -74.72 86.60 L -92.04 86.60 L -94.64 77.32 L -85.98 62.32 L -77.32 47.32 L -68.66 32.32 L -60.00 17.32 L -51.34 2.32 L -42.68 -12.68 L -34.02 -27.68 L -25.36 -42.68 L -16.70 -57.68 L -8.04 -72.68 Z"></path>
+      </svg>
+    </div>
+    <canvas id="three-canvas" width="1920" height="1080" aria-hidden="true"></canvas>
+    <canvas id="vfx-canvas" width="1920" height="1080" aria-hidden="true"></canvas>
+    <div id="copy-layer">
+      <h1>
+        <span>Build apps that generate video.</span>
+        <span>Vercel runs the render pipeline.</span>
+      </h1>
+    </div>
+    <div id="next-beat" aria-hidden="true">
+      <div id="beat-prefix"><span id="hf-word"><span id="hf-word-face">HyperFrames</span></span><span id="beat-now"> <span id="beat-symbol"><span id="beat-n">n</span><span id="beat-plus">+</span></span><span id="beat-rest">ow in</span></span></div>
+      <div id="beat-ercel-wrap"><span id="beat-ercel">ercel</span></div>
+      <img id="hf-icon" class="app-icon" src="assets/hfsquare.png" alt="">
+      <img id="vercel-icon" class="app-icon" src="assets/vercel.webp" alt="">
+    </div>
+    <div id="screen-video-layer" aria-hidden="true">
+      <video
+        id="screen-video"
+        data-start="6.519"
+        data-duration="14.333"
+        data-track-index="0"
+        src="assets/vercel-ss.mp4"
+        muted
+        playsinline
+      ></video>
+    </div>
+    <audio
+      id="screen-audio"
+      data-start="6.519"
+      data-duration="14.333"
+      data-track-index="1"
+      src="assets/vercel-ss.mp4"
+      data-volume="1"
+    ></audio>
+    <div id="label">white open</div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+
+    (function () {
+      const WIDTH = 1920;
+      const HEIGHT = 1080;
+      const root = document.querySelector("#vercel-intro");
+      const grid = document.querySelector("#grid");
+      const telemetry = document.querySelector("#telemetry");
+      const shadow = document.querySelector("#shadow");
+      const markLayer = document.querySelector("#mark-layer");
+      const shapeSvg = document.querySelector("#shape-svg");
+      const shapePath = document.querySelector("#shape-path");
+      const threeCanvas = document.querySelector("#three-canvas");
+      const vfxCanvas = document.querySelector("#vfx-canvas");
+      const copyLayer = document.querySelector("#copy-layer");
+      const nextBeat = document.querySelector("#next-beat");
+      const beatPrefix = document.querySelector("#beat-prefix");
+      const hfWord = document.querySelector("#hf-word");
+      const hfWordFace = document.querySelector("#hf-word-face");
+      const beatNow = document.querySelector("#beat-now");
+      const beatN = document.querySelector("#beat-n");
+      const beatPlus = document.querySelector("#beat-plus");
+      const beatRest = document.querySelector("#beat-rest");
+      const beatErcelWrap = document.querySelector("#beat-ercel-wrap");
+      const beatErcel = document.querySelector("#beat-ercel");
+      const hfIcon = document.querySelector("#hf-icon");
+      const vercelIcon = document.querySelector("#vercel-icon");
+      const screenVideoLayer = document.querySelector("#screen-video-layer");
+      const label = document.querySelector("#label");
+
+      const rawShapes = {
+        triangle: [[0, -86.6], [100, 86.6], [-100, 86.6]],
+        diamond: [[0, -100], [100, 0], [0, 100], [-100, 0]],
+        square: [[-86, -86], [86, -86], [86, 86], [-86, 86]],
+        frame: [[-100, -100], [100, -100], [100, 100], [-100, 100], [-100, 55], [55, 55], [55, -55], [-55, -55], [-55, 55], [-100, 55]],
+        spiral: spiralRibbonPoints(0, 0, 10, 112, 8, 3.05, 84),
+        circle: circlePoints(0, 0, 96, 48),
+        pyramid: [[0, -104], [105, 72], [22, 104], [0, 24], [-22, 104], [-105, 72]],
+        capsule: capsulePoints(0, 0, 104, 44, 18),
+        line: [[-116, -18], [116, -18], [116, 18], [-116, 18]],
+        verticalLine: [[-18, -116], [18, -116], [18, 116], [-18, 116]],
+        chevron: [[-104, -66], [-72, -98], [0, -26], [72, -98], [104, -66], [0, 38]],
+        cross: [[-112, -22], [-22, -22], [-22, -112], [22, -112], [22, -22], [112, -22], [112, 22], [22, 22], [22, 112], [-22, 112], [-22, 22], [-112, 22]],
+        v: [[-84, -88], [-50, -88], [0, 58], [50, -88], [84, -88], [20, 100], [-20, 100]]
+      };
+
+      const shapes = Object.fromEntries(
+        Object.entries(rawShapes).map(([name, points]) => [name, normalizeShape(name, resampleClosed(points, 80))])
+      );
+
+      const state = {
+        t: 0,
+        fromPoints: shapes.triangle,
+        toPoints: shapes.triangle,
+        morphProgress: 1,
+        x: -34,
+        y: 8,
+        scale: 0.62,
+        rotation: -118,
+        markOpacity: 1,
+        pyramidOpacity: 0,
+        pyramidRotation: 0,
+        pyramidTiltX: 0,
+        pyramidTiltZ: 0,
+        pyramidScale: 1,
+        gridOpacity: 0.82,
+        telemetryOpacity: 0,
+        shadowOpacity: 0,
+        copyOpacity: 0,
+        beatOpacity: 0,
+        beatBlur: 0,
+        beatCameraX: 0,
+        beatCameraY: 0,
+        beatCameraScale: 1,
+        prefixX: -760,
+        prefixOpacity: 0,
+        hfWordOpacity: 1,
+        hfWordRoll: 0,
+        nowX: 0,
+        nowRestOpacity: 1,
+        nowRestScale: 1,
+        nOpacity: 1,
+        nY: 0,
+        nScale: 1,
+        nRotation: 0,
+        plusY: -25,
+        plusOpacity: 0,
+        plusScale: 0.4,
+        plusRotation: -90,
+        ercelY: 0,
+        ercelOpacity: 1,
+        ercelRoll: 0,
+        ercelMask: 100,
+        hfIconOpacity: 0,
+        hfIconX: 0,
+        hfIconScale: 0.82,
+        hfIconRoll: -88,
+        hfIconZ: -120,
+        vercelIconOpacity: 0,
+        vercelIconX: 0,
+        vercelIconScale: 0.82,
+        vercelIconRoll: 88,
+        vercelIconZ: -120,
+        videoOpacity: 0,
+        videoX: 200,
+        videoBlur: 8,
+        vfxOpacity: 0,
+        effectMix: 0,
+        logoScale: 1,
+        mouseX: 260,
+        mouseY: 590,
+        dark: 0,
+        label: "white open"
+      };
+
+      function circlePoints(cx, cy, r, segments) {
+        const points = [];
+        for (let i = 0; i < segments; i += 1) {
+          const a = -Math.PI / 2 + (Math.PI * 2 * i) / segments;
+          points.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+        }
+        return points;
+      }
+
+      function capsulePoints(cx, cy, halfWidth, radius, segments) {
+        const points = [];
+        for (let i = 0; i <= segments; i += 1) {
+          const a = -Math.PI / 2 + (Math.PI * i) / segments;
+          points.push([cx + halfWidth + Math.cos(a) * radius, cy + Math.sin(a) * radius]);
+        }
+        for (let i = 0; i <= segments; i += 1) {
+          const a = Math.PI / 2 + (Math.PI * i) / segments;
+          points.push([cx - halfWidth + Math.cos(a) * radius, cy + Math.sin(a) * radius]);
+        }
+        return points;
+      }
+
+      function spiralRibbonPoints(cx, cy, innerRadius, outerRadius, thickness, turns, segments) {
+        const outer = [];
+        const inner = [];
+        const start = -Math.PI * 0.36;
+        const total = turns * Math.PI * 2;
+        for (let i = 0; i <= segments; i += 1) {
+          const p = i / segments;
+          const a = start + total * p;
+          const r = innerRadius + (outerRadius - innerRadius) * p;
+          outer.push([cx + Math.cos(a) * (r + thickness * 0.5), cy + Math.sin(a) * (r + thickness * 0.5)]);
+          inner.push([cx + Math.cos(a) * Math.max(5, r - thickness * 0.5), cy + Math.sin(a) * Math.max(5, r - thickness * 0.5)]);
+        }
+        return outer.concat(inner.reverse());
+      }
+
+      function distance(a, b) {
+        return Math.hypot(b[0] - a[0], b[1] - a[1]);
+      }
+
+      function resampleClosed(points, count) {
+        const closed = points.concat([points[0]]);
+        const lengths = [];
+        let total = 0;
+        for (let i = 0; i < closed.length - 1; i += 1) {
+          const len = distance(closed[i], closed[i + 1]);
+          lengths.push(len);
+          total += len;
+        }
+
+        const out = [];
+        for (let i = 0; i < count; i += 1) {
+          let target = (i / count) * total;
+          let seg = 0;
+          while (seg < lengths.length - 1 && target > lengths[seg]) {
+            target -= lengths[seg];
+            seg += 1;
+          }
+          const local = lengths[seg] === 0 ? 0 : target / lengths[seg];
+          const a = closed[seg];
+          const b = closed[seg + 1];
+          out.push([
+            a[0] + (b[0] - a[0]) * local,
+            a[1] + (b[1] - a[1]) * local
+          ]);
+        }
+        return out;
+      }
+
+      function polygonCentroid(points) {
+        let area = 0;
+        let cx = 0;
+        let cy = 0;
+        for (let i = 0; i < points.length; i += 1) {
+          const a = points[i];
+          const b = points[(i + 1) % points.length];
+          const cross = a[0] * b[1] - b[0] * a[1];
+          area += cross;
+          cx += (a[0] + b[0]) * cross;
+          cy += (a[1] + b[1]) * cross;
+        }
+
+        area *= 0.5;
+        if (Math.abs(area) < 0.0001) {
+          const sum = points.reduce((acc, p) => [acc[0] + p[0], acc[1] + p[1]], [0, 0]);
+          return [sum[0] / points.length, sum[1] / points.length];
+        }
+
+        return [cx / (6 * area), cy / (6 * area)];
+      }
+
+      function centerPoints(points) {
+        const center = polygonCentroid(points);
+        return points.map((p) => [p[0] - center[0], p[1] - center[1]]);
+      }
+
+      function centerByBounds(points) {
+        const xs = points.map((p) => p[0]);
+        const ys = points.map((p) => p[1]);
+        const cx = (Math.min(...xs) + Math.max(...xs)) * 0.5;
+        const cy = (Math.min(...ys) + Math.max(...ys)) * 0.5;
+        return points.map((p) => [p[0] - cx, p[1] - cy]);
+      }
+
+      function normalizeShape(name, points) {
+        return name === "triangle" ? centerByBounds(points) : centerPoints(points);
+      }
+
+      function pointsToPath(points) {
+        return "M " + points.map((p) => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(" L ") + " Z";
+      }
+
+      function currentPoints() {
+        return state.fromPoints.map((fromPoint, index) => {
+          const toPoint = state.toPoints[index];
+          return [
+            fromPoint[0] + (toPoint[0] - fromPoint[0]) * state.morphProgress,
+            fromPoint[1] + (toPoint[1] - fromPoint[1]) * state.morphProgress
+          ];
+        });
+      }
+
+      function morphTo(points, newLabel) {
+        state.fromPoints = currentPoints();
+        state.toPoints = points;
+        state.morphProgress = 0;
+        state.label = newLabel;
+      }
+
+      function setShapeBetween(fromPoints, toPoints, progress, newLabel) {
+        state.fromPoints = fromPoints;
+        state.toPoints = toPoints;
+        state.morphProgress = progress;
+        state.label = newLabel;
+      }
+
+      function applyJourneyShape(progress) {
+        const journey = [shapes.triangle, shapes.diamond, shapes.capsule, shapes.chevron, shapes.v];
+        if (progress >= 1) {
+          setShapeBetween(shapes.v, shapes.v, 1, "hyperframes in vercel");
+          return;
+        }
+        const scaled = Math.min(0.9999, Math.max(0, progress)) * (journey.length - 1);
+        const index = Math.floor(scaled);
+        const local = scaled - index;
+        setShapeBetween(journey[index], journey[index + 1], local, "hyperframes in vercel");
+      }
+
+      function renderDom() {
+        shapePath.setAttribute("d", pointsToPath(currentPoints()));
+        shapeSvg.style.transform = `translate(-50%, -50%) translate(${state.x}%, ${state.y}%) scale(${state.scale}) rotate(${state.rotation}deg)`;
+        grid.style.opacity = state.gridOpacity;
+        telemetry.style.opacity = state.telemetryOpacity;
+        shadow.style.opacity = state.shadowOpacity;
+        markLayer.style.opacity = state.markOpacity;
+        copyLayer.style.opacity = state.copyOpacity;
+        nextBeat.style.opacity = state.beatOpacity;
+        nextBeat.style.filter = `blur(${state.beatBlur}px)`;
+        nextBeat.style.transform = `translate(${state.beatCameraX}px, ${state.beatCameraY}px) scale(${state.beatCameraScale})`;
+        beatPrefix.style.opacity = state.prefixOpacity;
+        beatPrefix.style.transform = `translateX(${state.prefixX}px)`;
+        hfWord.style.opacity = state.hfWordOpacity;
+        hfWordFace.style.transform = `translateX(-40px) translateZ(${state.hfWordRoll * -70}px) rotateX(${state.hfWordRoll * -90}deg)`;
+        beatNow.style.transform = `translateX(${state.nowX + 20}px)`;
+        beatRest.style.opacity = state.nowRestOpacity;
+        beatRest.style.transform = `scale(${state.nowRestScale})`;
+        beatN.style.opacity = state.nOpacity;
+        beatN.style.transform = `translateY(${state.nY}px) rotate(${state.nRotation}deg) scale(${state.nScale})`;
+        beatPlus.style.opacity = state.plusOpacity;
+        beatPlus.style.transform = `translateY(${state.plusY}px) rotate(${state.plusRotation}deg) scale(${state.plusScale})`;
+        beatErcelWrap.style.opacity = state.ercelOpacity;
+        beatErcelWrap.style.clipPath = `inset(${state.ercelMask}% 0 0 0)`;
+        beatErcel.style.opacity = state.ercelOpacity;
+        beatErcel.style.transform = `translateY(${state.ercelY}px) translateZ(${state.ercelRoll * -70}px) rotateX(${state.ercelRoll * -90}deg)`;
+        hfIcon.style.opacity = state.hfIconOpacity;
+        hfIcon.style.transform = `translateX(${state.hfIconX}px) translateZ(${state.hfIconZ}px) rotateX(${state.hfIconRoll}deg) scale(${state.hfIconScale})`;
+        vercelIcon.style.opacity = state.vercelIconOpacity;
+        vercelIcon.style.transform = `translateX(${state.vercelIconX}px) translateZ(${state.vercelIconZ}px) rotateX(${state.vercelIconRoll}deg) scale(${state.vercelIconScale})`;
+        screenVideoLayer.style.opacity = state.videoOpacity;
+        screenVideoLayer.style.transform = `translateX(${state.videoX}px)`;
+        screenVideoLayer.style.filter = `blur(${state.videoBlur}px)`;
+        vfxCanvas.style.opacity = state.vfxOpacity;
+        threeCanvas.style.opacity = state.pyramidOpacity;
+        label.textContent = state.label;
+
+        if (state.dark >= 0.5) {
+          root.classList.add("is-dark");
+          root.style.backgroundColor = "#000000";
+        } else {
+          root.classList.remove("is-dark");
+          root.style.backgroundColor = "#ffffff";
+        }
+
+        renderShader();
+        renderPyramid();
+      }
+
+      function setupPyramid() {
+        if (!window.THREE) return null;
+
+        const renderer = new THREE.WebGLRenderer({
+          canvas: threeCanvas,
+          alpha: true,
+          antialias: true,
+          preserveDrawingBuffer: true
+        });
+        renderer.setSize(WIDTH, HEIGHT, false);
+        renderer.setPixelRatio(1);
+        renderer.setClearColor(0xffffff, 0);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(24, WIDTH / HEIGHT, 0.1, 100);
+        camera.position.set(0, 0, 5.9);
+        camera.lookAt(0, 0, 0);
+
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const verts = [
+          [0, 1.08, 0],
+          [-1.05, -0.78, 1.05],
+          [1.05, -0.78, 1.05],
+          [1.05, -0.78, -1.05],
+          [-1.05, -0.78, -1.05]
+        ];
+        const faces = [
+          [0, 1, 2, 0x000000],
+          [0, 2, 3, 0x121212],
+          [0, 3, 4, 0x050505],
+          [0, 4, 1, 0x1b1b1b],
+          [1, 4, 3, 0x080808],
+          [1, 3, 2, 0x0f0f0f]
+        ];
+
+        const positions = [];
+        const colors = [];
+        faces.forEach((face) => {
+          const color = new THREE.Color(face[3]);
+          for (let i = 0; i < 3; i += 1) {
+            const v = verts[face[i]];
+            positions.push(v[0], v[1], v[2]);
+            colors.push(color.r, color.g, color.b);
+          }
+        });
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+        geometry.computeVertexNormals();
+
+        const mesh = new THREE.Mesh(
+          geometry,
+          new THREE.MeshBasicMaterial({
+            vertexColors: true,
+            side: THREE.DoubleSide,
+            toneMapped: false
+          })
+        );
+        mesh.rotation.x = 0;
+        group.add(mesh);
+
+        return { renderer, scene, camera, group, mesh, spinAxis: new THREE.Vector3(0.62, 1, 0.34).normalize() };
+      }
+
+      const pyramid = setupPyramid();
+
+      function renderPyramid() {
+        if (!pyramid || state.pyramidOpacity <= 0.001) return;
+        pyramid.group.quaternion.setFromAxisAngle(pyramid.spinAxis, state.pyramidRotation);
+        pyramid.group.scale.setScalar(0.72 * state.pyramidScale);
+        pyramid.renderer.render(pyramid.scene, pyramid.camera);
+      }
+
+      function setupShader() {
+        const gl = vfxCanvas.getContext("webgl", { premultipliedAlpha: false, preserveDrawingBuffer: true });
+        if (!gl) return null;
+
+        const vertexSource = `
+          attribute vec2 position;
+          varying vec2 vUv;
+          void main() {
+            vUv = position * 0.5 + 0.5;
+            gl_Position = vec4(position, 0.0, 1.0);
+          }
+        `;
+
+        const fragmentSource = `
+          precision highp float;
+          varying vec2 vUv;
+          uniform vec2 resolution;
+          uniform vec2 mouse;
+          uniform float effectMix;
+          uniform float logoScale;
+          uniform sampler2D maskTex;
+
+          #define PI 3.141593
+          #define SAMPLES 96.0
+
+          float hash(vec2 p) {
+            return fract(sin(dot(p, vec2(489.0, 589.0))) * 492.0) * 2.0 - 1.0;
+          }
+
+          vec2 hash2(vec3 p) {
+            float x = fract(sin(dot(p, vec3(489.0, 589.0, 58.0))) * 492.0) * 2.0 - 1.0;
+            float y = fract(sin(dot(p + 1.7, vec3(197.0, 431.0, 83.0))) * 318.0) * 2.0 - 1.0;
+            return vec2(x, y);
+          }
+
+          vec4 readMask(vec2 uv) {
+            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec4(0.0);
+            return texture2D(maskTex, uv);
+          }
+
+          vec3 spectrum(float x) {
+            return cos((x - vec3(0.0, 0.5, 1.0)) * vec3(0.6, 1.0, 0.5) * PI);
+          }
+
+          void main() {
+            vec2 uv = vUv;
+            vec2 center = vec2(0.5);
+            vec2 logoUv = (uv - center) / logoScale + center;
+            vec2 split = vec2(0.014 + 0.028 * effectMix, 0.004 * sin(effectMix * PI));
+            float r = readMask(logoUv + split).r;
+            float g = readMask(logoUv).r;
+            float b = readMask(logoUv - split).r;
+            float mask = max(max(r, g), b);
+
+            vec2 p = uv * 2.0 - 1.0;
+            p.x *= resolution.x / resolution.y;
+            vec2 mp = mouse / resolution;
+            mp.y = 1.0 - mp.y;
+            mp = mp * 2.0 - 1.0;
+            mp.x *= resolution.x / resolution.y;
+
+            vec2 rp = p;
+            vec2 d = (mp - p) / SAMPLES;
+            float acc = 0.0;
+
+            for (float i = 0.0; i < SAMPLES; i++) {
+              rp += d;
+              rp += hash2(vec3(rp, i)) * 0.55 / SAMPLES;
+              vec2 rayUv = rp;
+              rayUv.x /= resolution.x / resolution.y;
+              rayUv = rayUv * 0.5 + 0.5;
+              vec2 rayLogoUv = (rayUv - center) / logoScale + center;
+              acc += readMask(rayLogoUv).r / SAMPLES;
+            }
+
+            vec3 c = vec3(0.0);
+            vec3 channels = vec3(r, g, b);
+            c += channels * (0.78 + effectMix * 0.62);
+            c += spectrum(cos(acc * 4.9)) * acc * 3.65 * effectMix;
+            c = max(c - 0.035, 0.0);
+            c *= 1.16;
+
+            float cursorX = mouse.x / resolution.x;
+            float sweep = exp(-pow((uv.x - cursorX) * 6.2, 2.0));
+            float textProximity = smoothstep(0.006, 0.34, acc);
+            float longRay = smoothstep(0.004, 0.18, acc);
+            vec3 sweepColor = vec3(0.14, 0.65, 0.85) + spectrum(cursorX * 1.8) * 0.28;
+            c += sweepColor * sweep * (0.34 + textProximity * 2.35) * effectMix;
+            c += spectrum(cursorX + acc * 2.0) * longRay * 0.58 * effectMix;
+            c = mix(c, vec3(1.0), smoothstep(0.02, 0.75, mask) * 0.28);
+            c += vec3(1.0) * smoothstep(0.04, 0.38, mask) * 0.12 * effectMix;
+
+            float grain = hash(uv * resolution.xy + mouse.x * 0.0007);
+            float logoDust = smoothstep(0.02, 0.38, acc) + smoothstep(0.03, 0.22, mask);
+            c += grain * 0.07 * (0.42 + logoDust) * effectMix;
+            c += spectrum(grain + cursorX) * abs(grain) * 0.045 * smoothstep(0.02, 0.5, acc) * effectMix;
+            gl_FragColor = vec4(c * effectMix, 1.0);
+          }
+        `;
+
+        function compile(type, source) {
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader));
+          }
+          return shader;
+        }
+
+        const program = gl.createProgram();
+        gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+        gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+          throw new Error(gl.getProgramInfoLog(program));
+        }
+
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+        gl.useProgram(program);
+
+        const position = gl.getAttribLocation(program, "position");
+        gl.enableVertexAttribArray(position);
+        gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+        const maskCanvas = document.createElement("canvas");
+        maskCanvas.width = WIDTH;
+        maskCanvas.height = HEIGHT;
+        const maskCtx = maskCanvas.getContext("2d");
+        const maskTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, maskTex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        return {
+          gl,
+          program,
+          maskCtx,
+          maskCanvas,
+          uniforms: {
+            resolution: gl.getUniformLocation(program, "resolution"),
+            mouse: gl.getUniformLocation(program, "mouse"),
+            effectMix: gl.getUniformLocation(program, "effectMix"),
+            logoScale: gl.getUniformLocation(program, "logoScale"),
+            maskTex: gl.getUniformLocation(program, "maskTex")
+          }
+        };
+      }
+
+      const shader = setupShader();
+
+      function drawTriangleMask(ctx) {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        ctx.save();
+        ctx.translate(WIDTH * 0.5, HEIGHT * 0.5);
+        ctx.scale(4.65 * state.logoScale, 4.65 * state.logoScale);
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(0, 86.6);
+        ctx.lineTo(100, -86.6);
+        ctx.lineTo(-100, -86.6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function renderShader() {
+        if (!shader || state.vfxOpacity <= 0.001) return;
+        const { gl, program, maskCtx, maskCanvas, uniforms } = shader;
+        drawTriangleMask(maskCtx);
+        gl.viewport(0, 0, WIDTH, HEIGHT);
+        gl.useProgram(program);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
+        gl.uniform1i(uniforms.maskTex, 0);
+        gl.uniform2f(uniforms.resolution, WIDTH, HEIGHT);
+        gl.uniform2f(uniforms.mouse, state.mouseX, state.mouseY);
+        gl.uniform1f(uniforms.effectMix, state.effectMix);
+        gl.uniform1f(uniforms.logoScale, state.logoScale);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+
+      const ROLL_DURATION = 1;
+      const CENTER_HOLD = 0;
+      const PYRAMID_ENTER_DURATION = 0;
+      const PYRAMID_EXIT_DURATION = 0.1;
+      const ORIGINAL_TRANSFORM_START = 0.88;
+      const TRANSFORM_START = ROLL_DURATION + CENTER_HOLD;
+      const TRANSFORM_SCALE = (3 / 1.75) / (1.5 * 1.5);
+      const TRANSFORM_END_ORIGINAL = 1.945;
+      const TRANSFORM_END = TRANSFORM_START + (TRANSFORM_END_ORIGINAL - ORIGINAL_TRANSFORM_START) * TRANSFORM_SCALE - 0.1;
+      const SHIFT = TRANSFORM_END - TRANSFORM_END_ORIGINAL;
+      const PRE_RGB_TRIANGLE_HOLD = 0.1;
+      const SHADER_HANDOFF = TRANSFORM_END + PRE_RGB_TRIANGLE_HOLD;
+      const PRE_RGB_SCALE_DURATION = 0.05;
+      const RGB_DURATION = ((3.19 - 2.05) / 1.5) / 1.25;
+      const SNAP = SHADER_HANDOFF + RGB_DURATION;
+      const SNAP_SCALE_DURATION = 0.2;
+      const LOCKUP = SNAP + SNAP_SCALE_DURATION;
+      const TOTAL_DURATION = LOCKUP;
+      const NEXT_BEAT_START = TOTAL_DURATION;
+      const NEXT_BEAT_LOGO_SLIDE_END = (2940 + 580) / 1000;
+      const NEXT_BEAT_DURATION = NEXT_BEAT_LOGO_SLIDE_END;
+      const CUT_OFFSET = 0.05;
+      const CUT_EXIT_DURATION = 0.33;
+      const CUT_ENTRY_DURATION = 0.42;
+      const VIDEO_DURATION = 14.333;
+      const VIDEO_EXIT_START = NEXT_BEAT_START + NEXT_BEAT_LOGO_SLIDE_END + CUT_OFFSET;
+      const VIDEO_CUT = VIDEO_EXIT_START + CUT_EXIT_DURATION;
+      const FINAL_DURATION = VIDEO_CUT + VIDEO_DURATION;
+      const animeTimeline = window.anime && anime.timeline;
+      const beatDriver = { ms: 0 };
+      const beatState = {
+        progress: 0,
+        x: 0,
+        y: 0,
+        scale: 1,
+        rotation: 0,
+        beatOpacity: 0,
+        beatCameraX: 0,
+        beatCameraY: 0,
+        beatCameraScale: 1,
+        prefixX: -760,
+        prefixOpacity: 0,
+        hfWordOpacity: 1,
+        hfWordRoll: 0,
+        nowX: 0,
+        nowRestOpacity: 1,
+        nowRestScale: 1,
+        nOpacity: 1,
+        nY: 0,
+        nScale: 1,
+        nRotation: 0,
+        plusY: -25,
+        plusOpacity: 0,
+        plusScale: 0.4,
+        plusRotation: -90,
+        ercelY: 0,
+        ercelOpacity: 1,
+        ercelRoll: 0,
+        ercelMask: 100,
+        hfIconOpacity: 0,
+        hfIconX: 0,
+        hfIconScale: 0.82,
+        hfIconRoll: -88,
+        hfIconZ: -120,
+        vercelIconOpacity: 0,
+        vercelIconX: 0,
+        vercelIconScale: 0.82,
+        vercelIconRoll: 88,
+        vercelIconZ: -120,
+        markOpacity: 1
+      };
+
+      function renderBeatState() {
+        state.x = beatState.x;
+        state.y = beatState.y;
+        state.scale = beatState.scale;
+        state.rotation = beatState.rotation;
+        state.markOpacity = beatState.markOpacity;
+        state.beatOpacity = beatState.beatOpacity;
+        state.beatCameraX = beatState.beatCameraX;
+        state.beatCameraY = beatState.beatCameraY;
+        state.beatCameraScale = beatState.beatCameraScale;
+        state.prefixX = beatState.prefixX;
+        state.prefixOpacity = beatState.prefixOpacity;
+        state.hfWordOpacity = beatState.hfWordOpacity;
+        state.hfWordRoll = beatState.hfWordRoll;
+        state.nowX = beatState.nowX;
+        state.nowRestOpacity = beatState.nowRestOpacity;
+        state.nowRestScale = beatState.nowRestScale;
+        state.nOpacity = beatState.nOpacity;
+        state.nY = beatState.nY;
+        state.nScale = beatState.nScale;
+        state.nRotation = beatState.nRotation;
+        state.plusY = beatState.plusY;
+        state.plusOpacity = beatState.plusOpacity;
+        state.plusScale = beatState.plusScale;
+        state.plusRotation = beatState.plusRotation;
+        state.ercelY = beatState.ercelY;
+        state.ercelOpacity = beatState.ercelOpacity;
+        state.ercelRoll = beatState.ercelRoll;
+        state.ercelMask = beatState.ercelMask;
+        state.hfIconOpacity = beatState.hfIconOpacity;
+        state.hfIconX = beatState.hfIconX;
+        state.hfIconScale = beatState.hfIconScale;
+        state.hfIconRoll = beatState.hfIconRoll;
+        state.hfIconZ = beatState.hfIconZ;
+        state.vercelIconOpacity = beatState.vercelIconOpacity;
+        state.vercelIconX = beatState.vercelIconX;
+        state.vercelIconScale = beatState.vercelIconScale;
+        state.vercelIconRoll = beatState.vercelIconRoll;
+        state.vercelIconZ = beatState.vercelIconZ;
+        state.copyOpacity = 0;
+        state.vfxOpacity = 0;
+        state.pyramidOpacity = 0;
+        state.dark = 0;
+        state.gridOpacity = 0;
+        state.shadowOpacity = 0;
+        state.telemetryOpacity = 0;
+        applyJourneyShape(beatState.progress);
+        renderDom();
+      }
+
+      const beatAnime = animeTimeline ? anime.timeline({
+        autoplay: false,
+        easing: "linear",
+        update: renderBeatState
+      }) : null;
+
+      if (beatAnime) {
+        beatAnime
+          .add({
+            targets: beatState,
+            beatOpacity: 1,
+            prefixOpacity: 1,
+            prefixX: 0,
+            nowX: -20,
+            duration: 680,
+            easing: "easeOutCubic"
+          }, 1620)
+          .add({
+            targets: beatState,
+            x: [
+              { value: -28, duration: 360, easing: "easeOutQuad" },
+              { value: 18, duration: 520, easing: "easeInOutSine" },
+              { value: 40.85, duration: 620, easing: "easeOutCubic" }
+            ],
+            y: [
+              { value: -30, duration: 360, easing: "easeOutQuad" },
+              { value: 16, duration: 520, easing: "easeInOutSine" },
+              { value: -2.4, duration: 620, easing: "easeOutCubic" }
+            ],
+            scale: [
+              { value: 0.46, duration: 360, easing: "easeOutQuad" },
+              { value: 0.2, duration: 520, easing: "easeInOutSine" },
+              { value: 0.105, duration: 620, easing: "easeOutCubic" }
+            ],
+            rotation: 1080,
+            progress: 1,
+            duration: 1500,
+            easing: "linear"
+          }, 220)
+          .add({
+            targets: beatState,
+            ercelMask: 0,
+            duration: 520,
+            easing: "easeOutCubic"
+          }, 1820)
+          .add({
+            targets: beatState,
+            duration: 440,
+            easing: "linear"
+          }, 2060)
+          .add({
+            targets: beatState,
+            duration: 660,
+            easing: "linear"
+          }, 2440)
+          .add({
+            targets: beatState,
+            nowRestOpacity: 0,
+            nowRestScale: 0.82,
+            duration: 100,
+            easing: "easeOutQuad"
+          }, 2540)
+          .add({
+            targets: beatState,
+            hfWordOpacity: 0,
+            ercelOpacity: 0,
+            hfWordRoll: 1,
+            ercelRoll: 1,
+            markOpacity: 0,
+            hfIconOpacity: 1,
+            vercelIconOpacity: 1,
+            hfIconScale: 1.18,
+            vercelIconScale: 1.18,
+            hfIconRoll: 0,
+            vercelIconRoll: 0,
+            hfIconZ: 0,
+            vercelIconZ: 0,
+            duration: 360,
+            easing: "easeOutCubic"
+          }, 2540)
+          .add({
+            targets: beatState,
+            nOpacity: 0,
+            nY: -25,
+            nScale: 0.58,
+            nRotation: 92,
+            nowX: 0,
+            plusY: -25,
+            plusOpacity: 1,
+            plusScale: 1,
+            plusRotation: 0,
+            duration: 240,
+            easing: "easeOutCubic"
+          }, 2790)
+          .add({
+            targets: beatState,
+            beatCameraX: 55,
+            beatCameraY: 91,
+            beatCameraScale: 2.025,
+            duration: 200,
+            easing: "easeOutCubic"
+          }, 2940)
+          .add({
+            targets: beatState,
+            hfIconX: 293,
+            vercelIconX: -165,
+            duration: 580,
+            easing: "easeInOutCubic"
+          }, 2940);
+      }
+
+      function seekBeat(ms) {
+        if (beatAnime) {
+          beatAnime.seek(ms);
+        } else {
+          const progress = Math.min(1, Math.max(0, ms / 1720));
+          const prefixProgress = Math.min(1, Math.max(0, (ms - 1620) / 680));
+          const ercelProgress = Math.min(1, Math.max(0, (ms - 1820) / 520));
+          const iconProgress = Math.min(1, Math.max(0, (ms - 2540) / 360));
+          const restProgress = Math.min(1, Math.max(0, (ms - 2540) / 100));
+          const plusProgress = Math.min(1, Math.max(0, (ms - 2790) / 240));
+          const cameraProgress = Math.min(1, Math.max(0, (ms - 2940) / 200));
+          const slideProgress = Math.min(1, Math.max(0, (ms - 2940) / 580));
+          beatState.progress = progress;
+          beatState.x = 40.85 * progress;
+          beatState.y = -2.4 * progress;
+          beatState.scale = 1 + (0.105 - 1) * progress;
+          beatState.rotation = 1080 * progress;
+          beatState.beatOpacity = Math.max(prefixProgress, ercelProgress, iconProgress);
+          beatState.beatCameraX = 55 * cameraProgress;
+          beatState.beatCameraY = 91 * cameraProgress;
+          beatState.beatCameraScale = 1 + 1.025 * cameraProgress;
+          beatState.prefixOpacity = prefixProgress;
+          beatState.prefixX = -760 * (1 - prefixProgress);
+          beatState.hfWordOpacity = 1 - iconProgress;
+          beatState.hfWordRoll = iconProgress;
+          beatState.nowRestOpacity = 1 - restProgress;
+          beatState.nowRestScale = 1 + (0.82 - 1) * restProgress;
+          beatState.nowX = prefixProgress > 0 ? -20 * (1 - plusProgress) : 0;
+          beatState.nOpacity = 1 - plusProgress;
+          beatState.nY = -25 * plusProgress;
+          beatState.nScale = 1 + (0.58 - 1) * plusProgress;
+          beatState.nRotation = 92 * plusProgress;
+          beatState.plusY = -25;
+          beatState.plusOpacity = plusProgress;
+          beatState.plusScale = 0.4 + 0.6 * plusProgress;
+          beatState.plusRotation = -90 * (1 - plusProgress);
+          beatState.ercelY = 0;
+          beatState.ercelOpacity = 1 - iconProgress;
+          beatState.ercelRoll = iconProgress;
+          beatState.ercelMask = 100 * (1 - ercelProgress);
+          beatState.markOpacity = 1 - iconProgress;
+          beatState.hfIconOpacity = iconProgress;
+          beatState.vercelIconOpacity = iconProgress;
+          beatState.hfIconScale = 0.82 + 0.36 * iconProgress;
+          beatState.vercelIconScale = 0.82 + 0.36 * iconProgress;
+          beatState.hfIconRoll = -88 + 88 * iconProgress;
+          beatState.vercelIconRoll = 88 - 88 * iconProgress;
+          beatState.hfIconZ = -120 + 120 * iconProgress;
+          beatState.vercelIconZ = -120 + 120 * iconProgress;
+          beatState.hfIconX = 293 * slideProgress;
+          beatState.vercelIconX = -165 * slideProgress;
+          renderBeatState();
+        }
+      }
+
+      const tl = gsap.timeline({ paused: true, onUpdate: renderDom });
+      tl.set(state, {
+        t: 0,
+        x: -180,
+        y: 0,
+        scale: 1,
+        rotation: -360,
+        markOpacity: 1,
+        pyramidOpacity: 0,
+        pyramidRotation: 0,
+        pyramidTiltX: 0,
+        pyramidTiltZ: 0,
+        pyramidScale: 1,
+        gridOpacity: 0.82,
+        telemetryOpacity: 0,
+        shadowOpacity: 0,
+        copyOpacity: 0,
+        beatOpacity: 0,
+        beatBlur: 0,
+        beatCameraX: 0,
+        beatCameraY: 0,
+        beatCameraScale: 1,
+        prefixX: -760,
+        prefixOpacity: 0,
+        hfWordOpacity: 1,
+        hfWordRoll: 0,
+        nowX: 0,
+        nowRestOpacity: 1,
+        nowRestScale: 1,
+        nOpacity: 1,
+        nY: 0,
+        nScale: 1,
+        nRotation: 0,
+        plusY: -25,
+        plusOpacity: 0,
+        plusScale: 0.4,
+        plusRotation: -90,
+        ercelY: 0,
+        ercelOpacity: 1,
+        ercelRoll: 0,
+        ercelMask: 100,
+        hfIconOpacity: 0,
+        hfIconX: 0,
+        hfIconScale: 0.82,
+        hfIconRoll: -88,
+        hfIconZ: -120,
+        vercelIconOpacity: 0,
+        vercelIconX: 0,
+        vercelIconScale: 0.82,
+        vercelIconRoll: 88,
+        vercelIconZ: -120,
+        videoOpacity: 0,
+        videoX: 200,
+        videoBlur: 8,
+        vfxOpacity: 0,
+        effectMix: 0,
+        logoScale: 1,
+        mouseX: 260,
+        mouseY: 590,
+        dark: 0,
+        label: "white open"
+      }, 0);
+      tl.call(() => morphTo(shapes.triangle, "white open"), [], 0);
+
+      tl.to(state, {
+        t: ROLL_DURATION,
+        x: 0,
+        y: 0,
+        scale: 1,
+        rotation: 0,
+        shadowOpacity: 0.46,
+        telemetryOpacity: 0.18,
+        mouseX: 730,
+        duration: ROLL_DURATION,
+        ease: "power2.out",
+        onUpdate: () => { state.label = "roll in"; }
+      }, 0);
+
+      tl.to(state, {
+        t: TRANSFORM_START,
+        duration: CENTER_HOLD,
+        ease: "none",
+        onUpdate: () => { state.label = "centered triangle hold"; }
+      }, ROLL_DURATION);
+
+      tl.set(state, {
+        pyramidRotation: 0,
+        pyramidTiltX: 0,
+        pyramidTiltZ: 0,
+        pyramidScale: 1,
+        shadowOpacity: 0,
+        telemetryOpacity: 0,
+        label: "3d pyramid"
+      }, TRANSFORM_START);
+
+      tl.set(state, {
+        markOpacity: 0,
+        pyramidOpacity: 1,
+        t: TRANSFORM_START,
+        label: "3d handoff"
+      }, TRANSFORM_START);
+
+      tl.to(state, {
+        pyramidRotation: Math.PI * 2,
+        pyramidScale: 1,
+        t: TRANSFORM_END - PYRAMID_EXIT_DURATION,
+        duration: TRANSFORM_END - TRANSFORM_START - PYRAMID_ENTER_DURATION - PYRAMID_EXIT_DURATION,
+        ease: "none",
+        onUpdate: () => { state.label = "3d pyramid rotate"; }
+      }, TRANSFORM_START + PYRAMID_ENTER_DURATION);
+
+      tl.call(() => morphTo(shapes.triangle, "triangle reset"), [], TRANSFORM_END);
+      tl.set(state, {
+        pyramidRotation: Math.PI * 2,
+        morphProgress: 1,
+        rotation: 0,
+        scale: 1,
+        label: "triangle reset"
+      }, TRANSFORM_END - PYRAMID_EXIT_DURATION);
+
+      tl.to(state, {
+        markOpacity: 1,
+        pyramidOpacity: 0,
+        t: TRANSFORM_END,
+        duration: PYRAMID_EXIT_DURATION,
+        ease: "power1.inOut",
+        onUpdate: () => { state.label = "triangle reset"; }
+      }, TRANSFORM_END - PYRAMID_EXIT_DURATION);
+
+      tl.to(state, {
+        scale: 1.2,
+        duration: PRE_RGB_SCALE_DURATION,
+        ease: "power2.in",
+        onUpdate: () => { state.label = "pre-rgb scale"; }
+      }, SHADER_HANDOFF - PRE_RGB_SCALE_DURATION);
+
+      tl.set(state, {
+        t: 2.1,
+        markOpacity: 0,
+        vfxOpacity: 1,
+        effectMix: 0.62,
+        logoScale: 0.9,
+        dark: 1,
+        mouseX: 700,
+        mouseY: 540,
+        gridOpacity: 0,
+        shadowOpacity: 0,
+        telemetryOpacity: 0,
+      }, SHADER_HANDOFF);
+
+      tl.to(state, {
+        t: 3.16,
+        effectMix: 1,
+        logoScale: 2.1,
+        mouseX: 1540,
+        mouseY: 520,
+        duration: SNAP - SHADER_HANDOFF,
+        ease: "power1.in",
+        onUpdate: () => { state.label = "continuous webgl push"; }
+      }, SHADER_HANDOFF);
+
+      tl.call(() => morphTo(shapes.triangle, "snap back"), [], SNAP);
+      tl.set(state, {
+        t: SNAP,
+        morphProgress: 1,
+        effectMix: 0,
+        vfxOpacity: 0,
+        markOpacity: 1,
+        copyOpacity: 0,
+        x: 0,
+        y: 0,
+        scale: 0.6,
+        rotation: 0,
+        dark: 0,
+        gridOpacity: 0,
+        shadowOpacity: 0,
+        telemetryOpacity: 0,
+        label: "snap back"
+      }, SNAP);
+
+      tl.to(state, {
+        t: LOCKUP,
+        scale: 1,
+        copyOpacity: 0,
+        duration: SNAP_SCALE_DURATION,
+        ease: "power2.out",
+        onUpdate: () => { state.label = "triangle scale in"; }
+      }, SNAP);
+
+      tl.to(state, {
+        t: TOTAL_DURATION,
+        duration: 0.2,
+        ease: "none",
+        onUpdate: () => { state.label = "clean lockup"; }
+      }, LOCKUP);
+
+      tl.set(state, {
+        x: 0,
+        y: 0,
+        scale: 1,
+        rotation: 0,
+        markOpacity: 1,
+        beatOpacity: 0,
+        beatBlur: 0,
+        beatCameraX: 0,
+        beatCameraY: 0,
+        beatCameraScale: 1,
+        prefixX: -760,
+        prefixOpacity: 0,
+        hfWordOpacity: 1,
+        hfWordRoll: 0,
+        nowX: 0,
+        nowRestOpacity: 1,
+        nowRestScale: 1,
+        nOpacity: 1,
+        nY: 0,
+        nScale: 1,
+        nRotation: 0,
+        plusY: -25,
+        plusOpacity: 0,
+        plusScale: 0.4,
+        plusRotation: -90,
+        ercelY: 0,
+        ercelOpacity: 1,
+        ercelRoll: 0,
+        ercelMask: 100,
+        hfIconOpacity: 0,
+        hfIconX: 0,
+        hfIconScale: 0.82,
+        hfIconRoll: -88,
+        hfIconZ: -120,
+        vercelIconOpacity: 0,
+        vercelIconX: 0,
+        vercelIconScale: 0.82,
+        vercelIconRoll: 88,
+        vercelIconZ: -120,
+        videoOpacity: 0,
+        videoX: 200,
+        videoBlur: 8,
+        label: "next beat setup"
+      }, NEXT_BEAT_START);
+
+      tl.call(() => {
+        beatDriver.ms = 0;
+        seekBeat(0);
+      }, [], NEXT_BEAT_START);
+
+      tl.to(beatDriver, {
+        ms: NEXT_BEAT_DURATION * 1000,
+        duration: NEXT_BEAT_DURATION,
+        ease: "none",
+        onUpdate: () => {
+          seekBeat(beatDriver.ms);
+        },
+        onComplete: () => {
+          seekBeat(NEXT_BEAT_DURATION * 1000);
+        }
+      }, NEXT_BEAT_START);
+
+      tl.to(state, {
+        beatCameraX: -200,
+        beatBlur: 8,
+        beatOpacity: 0,
+        duration: CUT_EXIT_DURATION,
+        ease: "power2.in",
+        onUpdate: () => {
+          state.label = "leftward cut exit";
+        }
+      }, VIDEO_EXIT_START);
+
+      tl.set(state, {
+        beatOpacity: 0,
+        videoOpacity: 1,
+        videoX: 200,
+        videoBlur: 8,
+        label: "video cut"
+      }, VIDEO_CUT);
+
+      tl.to(state, {
+        videoX: 0,
+        videoBlur: 0,
+        duration: CUT_ENTRY_DURATION,
+        ease: "expo.out",
+        onUpdate: () => {
+          state.label = "leftward video entry";
+        }
+      }, VIDEO_CUT);
+
+      renderDom();
+      window.__timelines["vercel-intro"] = tl;
+    })();
+  </script>
+</body>
+</html>
