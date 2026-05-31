@@ -64,7 +64,7 @@ export async function GET(
   const hasAnimeJs = html.includes("animejs") || html.includes("anime.min.js");
   const hasGsap = html.includes("gsap.min.js") || html.includes("gsap@");
 
-  const clipCount = (html.match(/"clip"/g) || []).length;
+  const clipCount = (html.match(/\bclip\b/g) || []).length;
   const videoClipCount = (html.match(/<video[\s>]/g) || []).length;
   const audioClipCount = (html.match(/<audio[\s>]/g) || []).length;
   const imgClipCount = (html.match(/<img[\s>]/g) || []).length;
