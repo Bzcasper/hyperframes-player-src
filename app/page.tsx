@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useReducer, useState, useRef, useCallback } from "react";
+import "@hyperframes/player"; // registers <hyperframes-player> custom element
 import type { RenderJob } from "@/lib/job-store";
 
 /* ───────── hyperframes-player web component declaration ───────── */
@@ -72,8 +73,10 @@ const STAGE_MAP: Record<
   capturing: { label: "Capturing frames\u2026", width: 65 },
   encoding: { label: "Encoding MP4\u2026", width: 85 },
   uploading: { label: "Uploading to Blob\u2026", width: 95 },
-  done: { label: "Done", width: 100 },
+  complete: { label: "Done", width: 100 },
   failed: { label: "Failed", width: 100 },
+  assembling: { label: "Assembling\u2026", width: 90 },
+  cancelled: { label: "Cancelled", width: 100 },
 };
 
 function getStageForStatus(status: string): { label: string; width: number } {
@@ -357,6 +360,7 @@ function RenderControls({
   const fields = (() => {
     if (activeTemplate === "jewelry-reveal") {
       return [
+        { key: "productImageUrl", label: "Product Image URL", placeholder: "https://res.cloudinary.com/..." },
         { key: "title", label: "Title", placeholder: "Tennis Bracelet" },
         { key: "price", label: "Price", placeholder: "$349" },
         {
@@ -440,7 +444,7 @@ function RenderControls({
                   onParamChange(f.key, e.currentTarget.value)
                 }
                 placeholder={f.placeholder}
-                className="w-full rounded-md px-3 py-2 text-sm font-mono placeholder-transparent"
+                className="w-full rounded-md px-3 py-2 text-sm font-mono"
                 style={{
                   background: "var(--bg-elevated)",
                   border: "1px solid var(--border)",
@@ -787,7 +791,7 @@ function JobMonitor({
 }
 
 function StatusBadge({ status }: { status: string }): React.ReactElement {
-  const isDone = status === "done";
+  const isDone = status === "complete";
   const isFailed = status === "failed";
   let bg: string;
   let color: string;
