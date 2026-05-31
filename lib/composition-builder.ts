@@ -379,6 +379,13 @@ export function validateCompositionHtml(html: string): string[] {
     );
   }
 
+  // Check 5: HyperFrames runtime script must be present
+  if (!html.includes("/hyperframes-runtime.js")) {
+    errors.push(
+      "FATAL: Missing HyperFrames runtime script (/hyperframes-runtime.js)",
+    );
+  }
+
   return errors;
 }
 
@@ -401,9 +408,11 @@ export function buildCompositionHtml(spec: VideoSpec): string {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: ${backgroundColor}; overflow: hidden; }
-    .clip { position: absolute; }
+    .clip { position: absolute; visibility: hidden; }
     ${globalStyles}
   </style>
+  <script src="/hyperframes-runtime.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 </head>
 <body>
   <div
@@ -416,12 +425,11 @@ export function buildCompositionHtml(spec: VideoSpec): string {
   >
 ${clipsHtml}
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
   <script>
     window.__timelines = window.__timelines || {};
     const tl = gsap.timeline({ paused: true });
 ${gsapBlocks}
-    tl.to({}, { duration: ${spec.totalDuration} }, 0);
+    tl.to({}, { duration: 0.001 }, ${spec.totalDuration});
     window.__timelines["${spec.compositionId}"] = tl;
   </script>
 </body>

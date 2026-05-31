@@ -85,6 +85,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     valid: errors.length === 0,
     errors,
     warnings: [],
-    checks: 4,
+    checks: 5,
   });
 }

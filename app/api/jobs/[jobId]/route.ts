@@ -34,7 +34,10 @@ export async function GET(
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
-  const finished = job.status === "done" || job.status === "failed";
+  const finished =
+    job.status === "complete" ||
+    job.status === "failed" ||
+    job.status === "cancelled";
   return NextResponse.json({ ...job, finished });
 }
 

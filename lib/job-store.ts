@@ -2,14 +2,16 @@ import { randomUUID } from "node:crypto";
 import { query, queryOne, execute } from "./db";
 
 export type JobStatus =
-  | "queued"         // job accepted, not yet started
-  | "restoring"      // Vercel Sandbox snapshot restore (~100ms)
-  | "preprocessing"  // producer compiling/bundling HTML
-  | "capturing"      // Chromium frame capture (the long step, ~90s)
-  | "encoding"       // FFmpeg MP4 encode
-  | "uploading"      // Vercel Blob PUT
-  | "done"
-  | "failed";
+  | "queued"         // waiting for Sandbox slot
+  | "restoring"      // Vercel Sandbox snapshot restore (~100ms, our layer)
+  | "preprocessing"  // compile + extract videos + audio mix (Stages 1-3)
+  | "rendering"      // Puppeteer BeginFrame capture (Stage 4, ~90s)
+  | "encoding"       // FFmpeg codec conversion (Stage 5)
+  | "assembling"     // audio/video mux + MP4 faststart (Stage 6)
+  | "uploading"      // Vercel Blob PUT (our layer)
+  | "complete"       // artifact ready, url populated
+  | "failed"         // error, error field populated
+  | "cancelled";     // aborted by system or spend guard
 
 export type JobEndpoint = "jobs" | "generate";
 
@@ -59,6 +61,36 @@ function rowToJob(row: {
     agentId: row.agent_id,
     meta: row.meta ?? {},
   };
+}
+
+/**
+ * UI progress percentage lookup. Mirrors upstream renderOrchestrator.ts stage timing.
+ * restoring and uploading are Vercel-template layers (not in upstream producer).
+ */
+export const stageProgressPct: Record<JobStatus, number> = {
+  queued:        2,
+  restoring:     6,
+  preprocessing: 18,
+  rendering:     72,
+  encoding:      88,
+  assembling:    94,
+  uploading:     97,
+  complete:      100,
+  failed:        0,
+  cancelled:     0,
+};
+
+/**
+ * Cancel a job — sets status to "cancelled" and records completion time.
+ * Returns the updated job or undefined if the job does not exist.
+ */
+export async function cancelJob(
+  id: string,
+): Promise<RenderJob | undefined> {
+  return updateJob(id, {
+    status: "cancelled",
+    completedAt: new Date().toISOString(),
+  });
 }
 
 export async function createJob(params: {

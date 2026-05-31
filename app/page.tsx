@@ -738,7 +738,7 @@ function JobMonitor({
                 </div>
 
                 {/* Row 4: done — MP4 link */}
-                {job.status === "done" && job.url && (
+                {job.status === "complete" && job.url && (
                   <div className="mt-1">
                     <a
                       href={job.url}
@@ -760,7 +760,7 @@ function JobMonitor({
                 )}
 
                 {/* Hover video preview for done jobs */}
-                {job.status === "done" && job.url && hoveredId === job.id && (
+                {job.status === "complete" && job.url && hoveredId === job.id && (
                   <div className="absolute right-full mr-3 top-0 z-50 rounded-md border overflow-hidden"
                        style={{
                          width: 200,
@@ -927,7 +927,7 @@ export default function StudioPage(): React.ReactElement {
         if (!res.ok) return;
         const job = (await res.json()) as RenderJob;
 
-        if (job.status === "done") {
+        if (job.status === "complete") {
           dispatch({ type: "DONE", job });
           clearInterval(id);
           /* refresh job list */
@@ -1217,7 +1217,7 @@ export default function StudioPage(): React.ReactElement {
                     <div className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
                       {job.composition}
                     </div>
-                    {job.status === "done" && job.url && (
+                    {job.status === "complete" && job.url && (
                       <a
                         href={job.url}
                         target="_blank"

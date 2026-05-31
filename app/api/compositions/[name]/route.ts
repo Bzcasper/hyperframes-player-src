@@ -15,8 +15,38 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { validateCompositionHtml } from "@/lib/composition-builder";
+import { parseCompositionVariables } from "@/lib/composition-variables";
+import type { CompositionVariable } from "@/lib/composition-variables";
 
 export const runtime = "nodejs";
+
+type CostTier = "low" | "medium" | "high" | "very-high";
+
+type CostMeta = {
+  hasShaders: boolean;
+  hasVideo: boolean;
+  clipCount: number;
+  duration: number | null;
+};
+
+/**
+ * Cost tier estimation mirroring upstream captureCost.ts logic.
+ * Source: packages/producer/src/services/render/captureCost.ts lines 64-89
+ */
+function estimateCostTier(meta: CostMeta): CostTier {
+  if (meta.hasShaders) return "very-high";
+  if (meta.hasVideo && (meta.duration ?? 0) > 30) return "high";
+  if (meta.hasVideo || meta.clipCount > 10) return "medium";
+  return "low";
+}
+
+/** Estimated render minutes (p50) for each tier on a 4-vCPU Sandbox. */
+const ESTIMATED_MINUTES: Record<CostTier, number> = {
+  low: 1.5,
+  medium: 2.5,
+  high: 4.0,
+  "very-high": 6.0,
+};
 
 export async function GET(
   _req: NextRequest,
@@ -85,6 +115,16 @@ export async function GET(
       ? Number(durationMatch[1])
       : null;
 
+  const costMeta: CostMeta = {
+    hasShaders: hasThreeJs,
+    hasVideo,
+    clipCount,
+    duration: totalDuration,
+  };
+  const costTier = estimateCostTier(costMeta);
+
+  const variables: CompositionVariable[] = parseCompositionVariables(html);
+
   return NextResponse.json({
     name,
     valid: lintErrors.length === 0,
@@ -108,5 +148,10 @@ export async function GET(
     scripts: scriptBlocks,
     lintErrors,
     timelineId: timelineMatch?.[1] ?? null,
+    costTier,
+    estimatedRenderMinutes: ESTIMATED_MINUTES[costTier],
+    renderPath: hasThreeJs ? "hdr" : "sdr",
+    variables,
+    hasVariables: variables.length > 0,
   });
 }

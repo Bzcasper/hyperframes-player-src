@@ -100,9 +100,12 @@ export function jobStatusToStage(status: JobStatus): GenerationStage | null {
     case "restoring":
       return "restoring";
     case "preprocessing":
-    case "capturing":
+      return "rendering";
+    case "rendering":
       return "rendering";
     case "encoding":
+      return "encoding";
+    case "assembling":
       return "encoding";
     case "uploading":
       return "uploading";

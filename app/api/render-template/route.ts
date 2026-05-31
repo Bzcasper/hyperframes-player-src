@@ -33,6 +33,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import {
   jewelryRevealSpec,
   youtubeIntroSpec,
@@ -46,6 +48,7 @@ import {
   validateCompositionHtml,
   type VideoSpec,
 } from "@/lib/composition-builder";
+import { buildVariableInjectedHtml } from "@/lib/composition-variables";
 import { createJob, updateJob, getJob, type RenderJob } from "@/lib/job-store";
 import { checkSpendLimit } from "@/lib/spend-guard";
 
@@ -103,6 +106,7 @@ interface TemplateBody {
   callbackUrl?: unknown;
   agentId?: unknown;
   meta?: unknown;
+  forceGenerated?: unknown;
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -155,30 +159,70 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
   const params = body.params as Record<string, unknown>;
 
-  let spec: VideoSpec;
-  try {
-    spec = buildSpecForTemplate(template, params);
-  } catch (err) {
-    return NextResponse.json(
-      {
-        error: "Invalid template params",
-        details: err instanceof Error ? err.message : "Unknown param error",
-      },
-      { status: 400 },
+  const forceGenerated = body.forceGenerated === true;
+
+  // PATH A: Variable injection from pre-authored composition.
+  // Faster — reads public/compositions/{template}/index.html, injects params as variables.
+  let spec: VideoSpec | null = null;
+  let html: string | null = null;
+  let renderPath: "variable-injection" | "generated" = "generated";
+
+  if (!forceGenerated) {
+    const preAuthoredPath = join(
+      process.cwd(),
+      "public",
+      "compositions",
+      template,
+      "index.html",
     );
+    try {
+      if (existsSync(preAuthoredPath)) {
+        const compositionHtml = readFileSync(preAuthoredPath, "utf-8");
+        html = buildVariableInjectedHtml(compositionHtml, params as Record<string, string | number | boolean>);
+        renderPath = "variable-injection";
+      }
+    } catch (err) {
+      // Variable injection failed — fall through to PATH B.
+      if (
+        err instanceof TypeError &&
+        err.message.startsWith("Variable validation failed:")
+      ) {
+        return NextResponse.json(
+          {
+            error: "Template param validation failed",
+            details: err.message,
+          },
+          { status: 400 },
+        );
+      }
+    }
   }
 
-  let html: string;
-  try {
-    html = buildCompositionHtml(spec);
-  } catch (err) {
-    return NextResponse.json(
-      {
-        error: "Composition build failed",
-        details: err instanceof Error ? err.message : "Unknown build error",
-      },
-      { status: 400 },
-    );
+  // PATH B: Generated fallback — build a VideoSpec from factory, then generate HTML.
+  if (html === null) {
+    try {
+      spec = buildSpecForTemplate(template, params);
+    } catch (err) {
+      return NextResponse.json(
+        {
+          error: "Invalid template params",
+          details: err instanceof Error ? err.message : "Unknown param error",
+        },
+        { status: 400 },
+      );
+    }
+
+    try {
+      html = buildCompositionHtml(spec);
+    } catch (err) {
+      return NextResponse.json(
+        {
+          error: "Composition build failed",
+          details: err instanceof Error ? err.message : "Unknown build error",
+        },
+        { status: 400 },
+      );
+    }
   }
 
   let callbackUrl: string | undefined;
@@ -202,26 +246,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
   }
 
+  const compositionId = spec?.compositionId ?? template;
+
   const job = await createJob({
-    composition: spec.compositionId,
+    composition: compositionId,
     endpoint: "generate",
     callbackUrl,
     agentId,
-    meta,
+    meta: { ...meta, renderPath },
   });
 
-  void runTemplateRender(job.id, spec, html);
+  void runTemplateRender(job.id, spec ?? compositionId, html, renderPath);
 
   return NextResponse.json(
     {
       jobId: job.id,
       status: job.status,
-      pollUrl: `/api/jobs/${job.id}`,
-      composition: spec.compositionId,
+        pollUrl: `/api/jobs/${job.id}`,
+      composition: compositionId,
       template,
       createdAt: job.createdAt,
-      width: spec.width,
-      height: spec.height,
     },
     { status: 202 },
   );
@@ -233,8 +277,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
  */
 async function runTemplateRender(
   id: string,
-  spec: VideoSpec,
+  specOrTemplate: VideoSpec | string,
   html: string,
+  _renderPath: "variable-injection" | "generated",
 ): Promise<void> {
   await updateJob(id, {
     status: "restoring",
@@ -259,6 +304,21 @@ async function runTemplateRender(
   try {
     await updateJob(id, { status: "preprocessing" });
 
+    // When using PATH A (variable injection), specOrTemplate is a string (template name)
+    // so extract width/height from the HTML via regex.
+    const renderCompositionId =
+      typeof specOrTemplate === "string"
+        ? specOrTemplate
+        : specOrTemplate.compositionId;
+    const renderWidth =
+      typeof specOrTemplate !== "string"
+        ? specOrTemplate.width
+        : Number(html.match(/data-width="(\d+)"/)?.[1] ?? 1920);
+    const renderHeight =
+      typeof specOrTemplate !== "string"
+        ? specOrTemplate.height
+        : Number(html.match(/data-height="(\d+)"/)?.[1] ?? 1080);
+
     const res = await fetch(`${origin}/api/render-generated`, {
       method: "POST",
       headers: {
@@ -268,10 +328,10 @@ async function runTemplateRender(
           : {}),
       },
       body: JSON.stringify({
-        compositionId: spec.compositionId,
+        compositionId: renderCompositionId,
         html,
-        width: spec.width,
-        height: spec.height,
+        width: renderWidth,
+        height: renderHeight,
       }),
     });
 
@@ -299,7 +359,7 @@ async function runTemplateRender(
       : null;
 
     const finished = await updateJob(id, {
-      status: "done",
+      status: "complete",
       url: data.url,
       completedAt,
       durationMs,

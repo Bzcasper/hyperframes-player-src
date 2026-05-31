@@ -21,7 +21,7 @@ test("/api/lint accepts plain text HTML body", async () => {
   assert.equal(res.status, 200);
   assert.ok(typeof body.valid === "boolean");
   assert.ok(Array.isArray(body.errors));
-  assert.equal(body.checks, 4);
+  assert.equal(body.checks, 5);
 });
 
 test("/api/lint accepts JSON body with html field", async () => {
@@ -91,12 +91,7 @@ test("/api/compositions/vercel-intro returns metadata", async () => {
   const body = (await res.json()) as {
     name: string;
     valid: boolean;
-    metadata: {
-      compositionId: string | null;
-      width: number | null;
-      height: number | null;
-      duration: number | null;
-    };
+    metadata: Record<string, unknown>;
     lintErrors: string[];
     timelineId: string | null;
   };
@@ -105,8 +100,8 @@ test("/api/compositions/vercel-intro returns metadata", async () => {
   assert.equal(body.metadata.width, 1920);
   assert.equal(body.metadata.height, 1080);
   assert.equal(body.metadata.duration, 11.05);
-  assert.ok(body.metadata.hasShaders === true);
-  assert.ok(body.metadata.hasGsap === true);
+  assert.equal(body.metadata.hasShaders, true);
+  assert.equal(body.metadata.hasGsap, true);
   assert.equal(body.timelineId, "vercel-intro");
 });
 

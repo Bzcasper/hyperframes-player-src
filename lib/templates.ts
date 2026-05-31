@@ -80,7 +80,7 @@ export function jewelryRevealSpec(p: JewelryRevealParams): VideoSpec {
     duration: duration - 2,
     track: 1,
     style:
-      "bottom:220px;left:0;right:0;text-align:center;color:#fff;font-size:64px;font-weight:900;text-shadow:0 2px 16px rgba(0,0,0,0.7);",
+      "position:absolute;bottom:220px;left:0;right:0;text-align:center;color:#fff;font-size:64px;font-weight:900;text-shadow:0 2px 16px rgba(0,0,0,0.7);",
     animation: { entrance: "fade-up", exit: "fade-out" },
   });
 
@@ -92,7 +92,7 @@ export function jewelryRevealSpec(p: JewelryRevealParams): VideoSpec {
       start: 1.4,
       duration: duration - 2.5,
       track: 2,
-      style: `bottom:170px;left:0;right:0;text-align:center;color:${accent};font-size:32px;font-weight:600;`,
+      style: `position:absolute;bottom:170px;left:0;right:0;text-align:center;color:${accent};font-size:32px;font-weight:600;`,
       animation: { entrance: "fade-in", entranceDuration: 0.5 },
     });
   }
@@ -105,7 +105,7 @@ export function jewelryRevealSpec(p: JewelryRevealParams): VideoSpec {
       start: 2,
       duration: duration - 2.5,
       track: 3,
-      style: `bottom:100px;left:0;right:0;text-align:center;color:#fff;font-size:48px;font-weight:700;background:${accent};display:inline-block;padding:8px 32px;border-radius:8px;`,
+      style: `position:absolute;bottom:100px;left:0;right:0;text-align:center;color:#fff;font-size:48px;font-weight:700;background:${accent};padding:8px 32px;border-radius:8px;`,
       animation: { entrance: "scale-up", entranceDuration: 0.4 },
     });
   }
@@ -144,7 +144,7 @@ export function youtubeIntroSpec(p: YouTubeIntroParams): VideoSpec {
     start: 0.5,
     duration: duration - 1,
     track: 1,
-    style: `top:280px;left:0;right:0;text-align:center;color:${accent};font-size:56px;font-weight:900;letter-spacing:4px;text-transform:uppercase;`,
+    style: `position:absolute;top:280px;left:0;right:0;text-align:center;color:${accent};font-size:56px;font-weight:900;letter-spacing:4px;text-transform:uppercase;`,
     animation: { entrance: "slide-right", entranceDuration: 0.5 },
   });
 
@@ -156,7 +156,7 @@ export function youtubeIntroSpec(p: YouTubeIntroParams): VideoSpec {
     duration: duration - 2,
     track: 2,
     style:
-      "top:380px;left:80px;right:80px;text-align:center;color:#fff;font-size:80px;font-weight:900;line-height:1.1;",
+      "position:absolute;top:380px;left:80px;right:80px;text-align:center;color:#fff;font-size:80px;font-weight:900;line-height:1.1;",
     animation: {
       entrance: "fade-up",
       exit: "fade-out",
@@ -201,7 +201,7 @@ export function priceDropSpec(p: PriceDropParams): VideoSpec {
     duration: duration - 1,
     track: 1,
     style:
-      "top:200px;left:0;right:0;text-align:center;color:#fff;font-size:56px;font-weight:700;",
+      "position:absolute;top:200px;left:0;right:0;text-align:center;color:#fff;font-size:56px;font-weight:700;",
     animation: { entrance: "fade-in" },
   });
 
@@ -213,7 +213,7 @@ export function priceDropSpec(p: PriceDropParams): VideoSpec {
     duration: duration - 1.5,
     track: 2,
     style:
-      "top:310px;left:0;right:0;text-align:center;color:#888;font-size:64px;font-weight:400;text-decoration:line-through;",
+      "position:absolute;top:310px;left:0;right:0;text-align:center;color:#888;font-size:64px;font-weight:400;text-decoration:line-through;",
     animation: { entrance: "fade-in", entranceDuration: 0.3 },
   });
 
@@ -224,7 +224,7 @@ export function priceDropSpec(p: PriceDropParams): VideoSpec {
     start: 1.6,
     duration: duration - 2,
     track: 3,
-    style: `top:390px;left:0;right:0;text-align:center;color:${accent};font-size:120px;font-weight:900;`,
+    style: `position:absolute;top:390px;left:0;right:0;text-align:center;color:${accent};font-size:120px;font-weight:900;`,
     animation: { entrance: "scale-up", entranceDuration: 0.5 },
   });
 
@@ -236,7 +236,7 @@ export function priceDropSpec(p: PriceDropParams): VideoSpec {
       start: 2.2,
       duration: duration - 2.5,
       track: 4,
-      style: `top:540px;left:50%;transform:translateX(-50%);background:${accent};color:#fff;font-size:40px;font-weight:900;padding:12px 40px;border-radius:999px;white-space:nowrap;`,
+      style: `position:absolute;top:540px;left:50%;transform:translateX(-50%);background:${accent};color:#fff;font-size:40px;font-weight:900;padding:12px 40px;border-radius:999px;white-space:nowrap;`,
       animation: { entrance: "scale-up", entranceDuration: 0.3 },
     });
   }
