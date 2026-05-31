@@ -220,19 +220,12 @@ function CompositionBrowser({
                 borderLeft: name === activeComposition ? "3px solid var(--accent)" : "1px solid var(--border)",
                 background: name === activeComposition ? "var(--bg-elevated)" : "transparent",
               }}>
-              <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
-                <img
-                  src={`/compositions/${name}/thumbnail.png`}
-                  alt={name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                    const parent = (e.currentTarget as HTMLImageElement).parentElement;
-                    if (parent) {
-                      parent.innerHTML = `<span style="color:var(--text-muted);font-size:11px;font-family:var(--font-mono)">${name}</span>`;
-                    }
-                  }}
-                />
+              <div className="relative aspect-video flex items-center justify-center overflow-hidden"
+                   style={{ background: "linear-gradient(135deg, var(--bg-elevated), var(--bg-surface))" }}>
+                <span className="text-[10px] font-mono px-2 text-center break-all"
+                      style={{ color: "var(--text-muted)" }}>
+                  {name}
+                </span>
               </div>
               <div className="px-2.5 py-2">
                 <span className="text-xs font-mono" style={{ color: "var(--text-primary)" }}>
