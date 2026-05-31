@@ -16,7 +16,8 @@ export const runtime = "nodejs";
 
 const RENDERING_STATES: ReadonlySet<JobStatus> = new Set<JobStatus>([
   "restoring",
-  "rendering",
+  "preprocessing",
+  "capturing",
   "encoding",
   "uploading",
 ]);
@@ -58,11 +59,23 @@ export async function GET(): Promise<NextResponse> {
       "POST /api/jobs",
       "POST /api/generate",
       "POST /api/render-template",
+      "POST /api/lint",
       "GET  /api/jobs",
       "GET  /api/jobs/:jobId",
       "GET  /api/compositions",
+      "GET  /api/compositions/:name",
       "GET  /api/status",
     ],
     templates: ["jewelry-reveal", "youtube-intro", "price-drop"],
+    stageMap: {
+      queued:        { progressPct: 2,  description: "Job accepted, awaiting execution" },
+      restoring:     { progressPct: 8,  description: "Vercel Sandbox snapshot restore" },
+      preprocessing: { progressPct: 20, description: "HTML compilation and asset bundling" },
+      capturing:     { progressPct: 75, description: "Chromium frame-by-frame capture" },
+      encoding:      { progressPct: 90, description: "FFmpeg MP4 encoding" },
+      uploading:     { progressPct: 97, description: "Vercel Blob storage upload" },
+      done:          { progressPct: 100, description: "Render complete" },
+      failed:        { progressPct: 0,  description: "Render failed" },
+    },
   });
 }

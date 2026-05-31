@@ -211,6 +211,7 @@ function renderClip(clip: ClipSpec): string {
     case "video": {
       const attrs = [
         `id="${escapeAttr(clip.id)}"`,
+        `class="clip"`,
         `data-start="${clip.start}"`,
         clip.duration !== undefined ? `data-duration="${clip.duration}"` : "",
         `data-track-index="${clip.track}"`,
@@ -269,7 +270,7 @@ function buildGsapBlocks(spec: VideoSpec): string {
     if (clip.type !== "text" || !clip.animation) continue;
 
     const anim = clip.animation;
-    const selector = `"#${clip.id}"`;
+    const id = clip.id;
 
     if (anim.entrance) {
       const d = anim.entranceDuration ?? DEFAULT_ENTRANCE_DURATION;
@@ -277,27 +278,27 @@ function buildGsapBlocks(spec: VideoSpec): string {
       switch (anim.entrance) {
         case "fade-up":
           lines.push(
-            `      tl.from(${selector}, { opacity:0, y:40, duration:${d} }, ${pos});`,
+            `      tl.from("#" + id, { opacity:0, y:40, duration:${d} }, ${pos});`,
           );
           break;
         case "fade-in":
           lines.push(
-            `      tl.from(${selector}, { opacity:0, duration:${d} }, ${pos});`,
+            `      tl.from("#" + id, { opacity:0, duration:${d} }, ${pos});`,
           );
           break;
         case "slide-left":
           lines.push(
-            `      tl.from(${selector}, { opacity:0, x:-80, duration:${d} }, ${pos});`,
+            `      tl.from("#" + id, { opacity:0, x:-80, duration:${d} }, ${pos});`,
           );
           break;
         case "slide-right":
           lines.push(
-            `      tl.from(${selector}, { opacity:0, x:80, duration:${d} }, ${pos});`,
+            `      tl.from("#" + id, { opacity:0, x:80, duration:${d} }, ${pos});`,
           );
           break;
         case "scale-up":
           lines.push(
-            `      tl.from(${selector}, { opacity:0, scale:0.8, duration:${d} }, ${pos});`,
+            `      tl.from("#" + id, { opacity:0, scale:0.8, duration:${d} }, ${pos});`,
           );
           break;
       }
@@ -309,22 +310,22 @@ function buildGsapBlocks(spec: VideoSpec): string {
       switch (anim.exit) {
         case "fade-out":
           lines.push(
-            `      tl.to(${selector}, { opacity:0, duration:${d} }, ${exitStart});`,
+            `      tl.to("#" + id, { opacity:0, duration:${d} }, ${exitStart});`,
           );
           break;
         case "slide-left":
           lines.push(
-            `      tl.to(${selector}, { opacity:0, x:-80, duration:${d} }, ${exitStart});`,
+            `      tl.to("#" + id, { opacity:0, x:-80, duration:${d} }, ${exitStart});`,
           );
           break;
         case "slide-right":
           lines.push(
-            `      tl.to(${selector}, { opacity:0, x:80, duration:${d} }, ${exitStart});`,
+            `      tl.to("#" + id, { opacity:0, x:80, duration:${d} }, ${exitStart});`,
           );
           break;
         case "fade-down":
           lines.push(
-            `      tl.to(${selector}, { opacity:0, y:40, duration:${d} }, ${exitStart});`,
+            `      tl.to("#" + id, { opacity:0, y:40, duration:${d} }, ${exitStart});`,
           );
           break;
       }
@@ -332,6 +333,53 @@ function buildGsapBlocks(spec: VideoSpec): string {
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Run static pre-flight checks against generated composition HTML.
+ * Returns an array of error strings. Empty array = valid.
+ * These mirror the upstream linter's FATAL checks that would abort a render.
+ */
+export function validateCompositionHtml(html: string): string[] {
+  const errors: string[] = [];
+
+  // Check 1: data-composition-id present on a root element
+  if (!html.includes("data-composition-id=")) {
+    errors.push("FATAL: No data-composition-id found on root element");
+  }
+
+  // Check 2: window.__timelines initialized before assignment
+  const initIdx = html.indexOf("window.__timelines = window.__timelines");
+  const assignIdx = html.indexOf("window.__timelines[");
+  if (assignIdx !== -1 && initIdx === -1) {
+    errors.push("FATAL: window.__timelines assigned without initialization");
+  }
+  if (initIdx !== -1 && assignIdx !== -1 && assignIdx < initIdx) {
+    errors.push("FATAL: window.__timelines assigned before initialization");
+  }
+
+  // Check 3: no Math.random or Date.now in script blocks
+  const scriptBlocks = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];
+  for (const [, content] of scriptBlocks) {
+    if (content.includes("Math.random()")) {
+      errors.push("FATAL: Math.random() found in script block (non-deterministic)");
+    }
+    if (content.includes("Date.now()")) {
+      errors.push("FATAL: Date.now() found in script block (non-deterministic)");
+    }
+  }
+
+  // Check 4: timeline ID matches data-composition-id
+  const compIdMatch = html.match(/data-composition-id="([^"]+)"/);
+  const timelineMatch = html.match(/window\.__timelines\["([^"]+)"\]/);
+  if (compIdMatch && timelineMatch && compIdMatch[1] !== timelineMatch[1]) {
+    errors.push(
+      `FATAL: timeline_id_mismatch \u2014 data-composition-id="${compIdMatch[1]}" ` +
+      `but window.__timelines["${timelineMatch[1]}"]`,
+    );
+  }
+
+  return errors;
 }
 
 /**

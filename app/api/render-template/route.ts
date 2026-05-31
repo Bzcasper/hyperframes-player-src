@@ -43,6 +43,7 @@ import {
 } from "@/lib/templates";
 import {
   buildCompositionHtml,
+  validateCompositionHtml,
   type VideoSpec,
 } from "@/lib/composition-builder";
 import { createJob, updateJob, getJob, type RenderJob } from "@/lib/job-store";
@@ -240,12 +241,23 @@ async function runTemplateRender(
     startedAt: new Date().toISOString(),
   });
 
+  // Pre-flight lint — catches FATAL composition errors before spending credits.
+  const lintErrors = validateCompositionHtml(html);
+  if (lintErrors.length > 0) {
+    await updateJob(id, {
+      status: "failed",
+      error: "Pre-flight lint failed:\n" + lintErrors.join("\n"),
+      completedAt: new Date().toISOString(),
+    });
+    return;
+  }
+
   const origin = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000";
 
   try {
-    await updateJob(id, { status: "rendering" });
+    await updateJob(id, { status: "preprocessing" });
 
     const res = await fetch(`${origin}/api/render-generated`, {
       method: "POST",

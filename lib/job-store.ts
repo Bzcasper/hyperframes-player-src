@@ -2,11 +2,12 @@ import { randomUUID } from "node:crypto";
 import { query, queryOne, execute } from "./db";
 
 export type JobStatus =
-  | "queued"
-  | "restoring"
-  | "rendering"
-  | "encoding"
-  | "uploading"
+  | "queued"         // job accepted, not yet started
+  | "restoring"      // Vercel Sandbox snapshot restore (~100ms)
+  | "preprocessing"  // producer compiling/bundling HTML
+  | "capturing"      // Chromium frame capture (the long step, ~90s)
+  | "encoding"       // FFmpeg MP4 encode
+  | "uploading"      // Vercel Blob PUT
   | "done"
   | "failed";
 
