@@ -12,7 +12,6 @@ export async function POST() {
     const { mp4 } = await renderInSandbox(files);
 
     const blob = await put("renders/render.mp4", mp4, {
-      access: "public",
       contentType: "video/mp4",
       addRandomSuffix: true,
       allowOverwrite: true,

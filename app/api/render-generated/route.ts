@@ -79,7 +79,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ]);
 
     const blob = await put(`generated/${compositionId}-${Date.now()}.mp4`, mp4, {
-      access: "public",
       contentType: "video/mp4",
       addRandomSuffix: true,
       allowOverwrite: true,

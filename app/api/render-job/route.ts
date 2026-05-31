@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const { mp4 } = await renderInSandbox(files);
 
     const blob = await put(`renders/${publishedId || "agent"}-${Date.now()}.mp4`, mp4, {
-      access: "public",
+      access: "private",
       contentType: "video/mp4",
       addRandomSuffix: true,
     });
