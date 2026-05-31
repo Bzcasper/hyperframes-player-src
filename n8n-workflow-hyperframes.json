@@ -1,0 +1,274 @@
+{
+  "name": "HyperFrames Render Pipeline",
+  "active": true,
+  "nodes": [
+    {
+      "id": "c4a7e3b1-9f2d-4a8c-8b5e-1d2f3a4b5c6d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "path": "webhook/video-done",
+        "method": "POST",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e7f8a9b0-1c2d-3e4f-5a6b-7c8d9e0f1a2b",
+      "name": "Route by Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.status }}",
+        "rules": [
+          {
+            "value2": "done",
+            "output": "success"
+          },
+          {
+            "value2": "failed",
+            "output": "failure"
+          }
+        ],
+        "fallbackOutput": "failure"
+      }
+    },
+    {
+      "id": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+      "name": "Extract Video Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 200],
+      "parameters": {
+        "functionCode": "const job = $json;\n\nconst filename = `${job.composition || 'render'}-${Date.now()}.mp4`;\n\nreturn [\n  {\n    ...job,\n    filename,\n    downloadUrl: job.url,\n    event: 'render.complete',\n    processedAt: new Date().toISOString(),\n  }\n];\n"
+      }
+    },
+    {
+      "id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "name": "Download MP4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.downloadUrl }}",
+        "options": {
+          "response": {
+            "responseFormat": "file",
+            "response": {
+              "setFileName": "={{ $json.filename }}"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "b6c7d8e9-0f1a-2b3c-4d5e-6f7a8b9c0d1e",
+      "name": "Upload to YouTube (placeholder)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://placeholder.youtube.com/upload",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "notes": "Replace with YouTube Data API node or yutu CLI exec. The MP4 binary is available in the previous node's output."
+    },
+    {
+      "id": "c8d9e0f1-2a3b-4c5d-6e7f-8a9b0c1d2e3f",
+      "name": "Build Success Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 400],
+      "parameters": {
+        "functionCode": "const job = $json;\n\nreturn [\n  {\n    event: 'render.complete',\n    jobId: job.jobId || $('Webhook').first().json.jobId,\n    composition: job.composition || $('Webhook').first().json.composition,\n    url: job.url || $('Webhook').first().json.url,\n    agentId: job.agentId || $('Webhook').first().json.agentId || 'unknown',\n    durationMs: job.durationMs || $('Webhook').first().json.durationMs || null,\n    source: job.meta?.source || $('Webhook').first().json.meta?.source || null,\n    filename: job.filename,\n    timestamp: new Date().toISOString(),\n  }\n];\n"
+      }
+    },
+    {
+      "id": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+      "name": "Notify Hermes (Success)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:18789/hooks/render-done",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-HyperFrames-Event",
+              "value": "render.complete"
+            },
+            {
+              "name": "X-HyperFrames-Job-Id",
+              "value": "={{ $json.jobId }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENCLAW_HOOKS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "f4a5b6c7-8d9e-0f1a-2b3c-4d5e6f7a8b9c",
+      "name": "Build Error Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 500],
+      "parameters": {
+        "functionCode": "const job = $json;\n\nreturn [\n  {\n    event: 'render.failed',\n    jobId: job.jobId || 'unknown',\n    composition: job.composition || 'unknown',\n    error: job.error || 'Unknown error',\n    agentId: job.agentId || null,\n    timestamp: new Date().toISOString(),\n  }\n];\n"
+      }
+    },
+    {
+      "id": "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e",
+      "name": "Notify Hermes (Failure)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:18789/hooks/render-done",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-HyperFrames-Event",
+              "value": "render.failed"
+            },
+            {
+              "name": "X-HyperFrames-Job-Id",
+              "value": "={{ $json.jobId }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENCLAW_HOOKS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "3e4f5a6b-7c8d-9e0f-1a2b-3c4d5e6f7a8b",
+      "name": "Note: YouTube Upload",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1000, 50],
+      "parameters": {
+        "content": "## YouTube Upload Setup\n\nThe \"Upload to YouTube\" node above is a placeholder. To enable actual YouTube uploads:\n\n1. Add a YouTube node (n8n-nodes-base.youtube) with OAuth2 credentials\n2. Connect it after \"Download MP4\"\n3. Map the binary file as the video body\n4. Set title, description, privacy status\n\nAlternatively, use the yutu CLI via an Execute Command node:\n  yutu upload \"{{ $json.filename }}\" --title \"{{ $json.composition }}\" --private",
+        "height": 200,
+        "width": 300
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Status": {
+      "main": [
+        [
+          {
+            "node": "Extract Video Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Error Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Video Data": {
+      "main": [
+        [
+          {
+            "node": "Download MP4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Success Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success Log": {
+      "main": [
+        [
+          {
+            "node": "Notify Hermes (Success)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Error Log": {
+      "main": [
+        [
+          {
+            "node": "Notify Hermes (Failure)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "tags": []
+}

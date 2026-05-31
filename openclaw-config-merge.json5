@@ -1,0 +1,156 @@
+// =============================================================================
+// OpenClaw Config Merge Block — HyperFrames Render Integration
+// Merge these keys into ~/.openclaw/openclaw.json
+// =============================================================================
+// How to merge:
+//   1. Open ~/.openclaw/openclaw.json in an editor
+//   2. Add or replace each section below (env, skills, hooks, cron)
+//   3. Set the actual values (or ensure shell env vars are exported)
+//   4. Restart OpenClaw: openclaw restart
+// =============================================================================
+
+{
+  // ── Environment Variables ───────────────────────────────────────────
+  // These are injected into skill and hook execution contexts.
+  // Values use ${VAR} syntax — OpenClaw resolves from shell env on restart.
+  env: {
+    HYPERFRAMES_URL: "${HYPERFRAMES_URL}",    // e.g. https://hyperframes.vercel.app
+    RENDER_API_KEY: "${RENDER_API_KEY}",      // shared secret with Vercel
+  },
+
+  // ── Skills ──────────────────────────────────────────────────────────
+  skills: {
+    entries: {
+      "hyperframes-render": {
+        enabled: true,
+        env: {
+          HYPERFRAMES_URL: "${HYPERFRAMES_URL}",
+          RENDER_API_KEY: "${RENDER_API_KEY}",
+        },
+      },
+    },
+  },
+
+  // ── Hooks (Webhook Receiver) ────────────────────────────────────────
+  // OpenClaw listens on port 18789 by default.
+  // HyperFrames callbacks POST to: http://localhost:18789/hooks/render-done
+  //
+  // Headers from HyperFrames:
+  //   X-HyperFrames-Event: render.complete | render.failed
+  //   X-HyperFrames-Job-Id: <uuid>
+  //   Content-Type: application/json
+  //
+  // The Authorization header is set by HyperFrames from OPENCLAW_HOOKS_TOKEN
+  // (shared secret between HyperFrames env and OpenClaw config)
+  hooks: {
+    // The token that callers must send as Bearer token in Authorization header.
+    // Generate with: openssl rand -hex 32
+    token: "OPENCLAW_HOOKS_TOKEN_PLACEHOLDER_CHANGE_ME",
+
+    // Prefixes that are allowed to create/join sessions from hook requests.
+    allowedSessionKeyPrefixes: [
+      "hook:",
+    ],
+
+    mappings: [
+      {
+        // Path segment after /hooks/
+        path: "render-done",
+
+        // The agent that receives this message
+        agentId: "content",
+
+        // sessionKey determines how conversations are grouped.
+        // "hook:render:<jobId>" — each job gets its own session
+        sessionKey: "hook:render:{{id}}",
+
+        // Allow the hook payload to override the sessionKey via the
+        // request body's sessionKey field
+        allowRequestSessionKey: true,
+
+        // Template for the message sent to the agent.
+        // Available variables: the full request body (RenderJob object)
+        // plus X-HyperFrames-Event and X-HyperFrames-Job-Id headers.
+        messageTemplate: |-
+          HyperFrames render {{X-HyperFrames-Event}} for job {{X-HyperFrames-Job-Id}}.
+
+          Status: {{status}}
+          Composition: {{composition}}
+          {{#if url}}MP4 URL: {{url}}{{/if}}
+          {{#if error}}Error: {{error}}{{/if}}
+          {{#if durationMs}}Duration: {{durationMs}}ms{{/if}}
+          Agent: {{agentId}}
+
+          {{#if X-HyperFrames-Event "===" "render.complete"}}
+          The video is ready. You can view it at the URL above.
+          {{else}}
+          The render failed. Check the error message and try again with
+          corrected parameters.
+          {{/if}}
+
+        // Deliver the message to the agent's last active channel
+        deliver: true,
+        to: "last",
+
+        // Wake the agent immediately if sleeping
+        wakeMode: "now",
+
+        // Log the event
+        log: true,
+      },
+    ],
+  },
+
+  // ── Cron Jobs ───────────────────────────────────────────────────────
+  // Schedules use standard cron syntax in America/Los_Angeles timezone.
+  cron: {
+    jobs: [
+      {
+        // Every day at 9:00 AM Pacific — check for new jewelry items
+        schedule: "0 9 * * *",
+        timezone: "America/Los_Angeles",
+        message: |-
+          Check if there are any new jewelry items to photograph and create
+          listing videos for. If yes, use the hyperframes-render skill to
+          create a jewelry-reveal video for each new item and report back
+          with the MP4 URLs.
+        agentId: "content",
+        sessionTarget: "isolated",
+        wakeMode: "now",
+        deliver: true,
+        to: "last",
+      },
+      {
+        // Every Monday at 8:00 AM Pacific — YouTube intro for the week
+        schedule: "0 8 * * 1",
+        timezone: "America/Los_Angeles",
+        message: |-
+          Create a YouTube intro video for this week's CreationcompanionDIY
+          episode using the hyperframes-render skill. Use the youtube-intro
+          template with channelName '@CreationcompanionDIY' and episodeTitle
+          from the most recent draft in memory.
+        agentId: "content",
+        sessionTarget: "isolated",
+        wakeMode: "now",
+        deliver: true,
+        to: "last",
+      },
+    ],
+  },
+
+  // ── MCP (optional — commented out because /api/status returns plain JSON,
+  //    not MCP protocol. A proper MCP wrapper would require a wrapper server
+  //    that converts the JSON response to MCP tool format.) ──
+  //
+  // mcp: {
+  //   servers: {
+  //     "hyperframes-status": {
+  //       url: "${HYPERFRAMES_URL}/api/status",
+  //       transport: "streamable-http",
+  //     },
+  //   },
+  // },
+  //
+  // Until a proper MCP wrapper is built, use curl for status checks:
+  //   curl -s "${HYPERFRAMES_URL}/api/status" | jq '{spend, queue}'
+}
